@@ -16,6 +16,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from .models import MonitoringForm, MonitoringRecord, FollowUpAction
 from .forms import MonitoringFormDefinitionForm, MonitoringRecordForm, FollowUpActionForm
 from .linked_records import linked_record_choices as get_linked_record_choices
+from account.permissions import create_required, edit_required, system_admin_required
 
 
 @login_required
@@ -43,6 +44,7 @@ def form_definition_list(request):
     )
 
 @login_required
+@system_admin_required
 def form_definition_create(request):
     form = MonitoringFormDefinitionForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -61,6 +63,7 @@ def form_definition_create(request):
 
 
 @login_required
+@system_admin_required
 def form_definition_update(request, pk):
     obj = get_object_or_404(MonitoringForm, pk=pk)
     form = MonitoringFormDefinitionForm(request.POST or None, instance=obj)
@@ -91,6 +94,7 @@ def schema_builder_data(request, obj=None):
 
 
 @login_required
+@system_admin_required
 def form_definition_delete(request, pk):
     obj = get_object_or_404(MonitoringForm, pk=pk)
     if request.method == 'POST':
@@ -157,6 +161,7 @@ def record_list(request):
     return render(request,'monitoring/record_list.html',{'records':records,'forms':MonitoringForm.objects.filter(is_active=True),'filters':request.GET})
 
 @login_required
+@create_required
 def record_create(request):
     initial = {}
     for key in ('form', 'activity', 'group_or_beneficiary', 'project_name', 'location', 'district'):
@@ -189,6 +194,7 @@ def record_create(request):
     return render(request,'monitoring/record_form.html',{'form':form,'schema':prepare_schema(selected_schema),'page_title':'New monitoring record'})
 
 @login_required
+@edit_required
 def record_update(request,pk):
     obj=get_object_or_404(MonitoringRecord,pk=pk); form=MonitoringRecordForm(request.POST or None,instance=obj)
     schema=obj.form.schema
@@ -329,6 +335,7 @@ def record_detail(request,pk):
     })
 
 @login_required
+@edit_required
 def record_section_update(request, pk, section_index):
     obj = get_object_or_404(MonitoringRecord.objects.select_related('form', 'project', 'activity'), pk=pk)
     sections = obj.form.schema or []
@@ -352,6 +359,7 @@ def record_section_update(request, pk, section_index):
     })
 
 @login_required
+@system_admin_required
 def record_delete(request,pk):
     obj=get_object_or_404(MonitoringRecord,pk=pk)
     if request.method=='POST':
@@ -359,6 +367,7 @@ def record_delete(request,pk):
     return render(request,'monitoring/confirm_delete.html',{'object':obj,'cancel_url':'record_detail'})
 
 @login_required
+@edit_required
 def followup_update(request,pk):
     obj=get_object_or_404(FollowUpAction,pk=pk); record_id=obj.record_id
     form=FollowUpActionForm(request.POST or None,instance=obj)
@@ -367,6 +376,7 @@ def followup_update(request,pk):
     return render(request,'monitoring/followup_form.html',{'form':form,'action':obj})
 
 @login_required
+@system_admin_required
 def followup_delete(request,pk):
     obj=get_object_or_404(FollowUpAction,pk=pk); rid=obj.record_id
     if request.method=='POST': obj.delete(); messages.success(request,'Follow-up deleted.')

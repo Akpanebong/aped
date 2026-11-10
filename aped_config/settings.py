@@ -41,15 +41,21 @@ CSRF_TRUSTED_ORIGINS = env_list(
 INSTALLED_APPS = [
     "django.contrib.admin", "django.contrib.auth", "django.contrib.contenttypes", "django.contrib.humanize",
     "django.contrib.sessions", "django.contrib.messages", "django.contrib.staticfiles",
-    "core", "monitoring", "vsla_app.vsla",
+    "core", "monitoring", "vsla_app.vsla", "account",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware", "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware", "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware", "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware", "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "account.middleware.RoleEnforcementMiddleware",
 ]
 ROOT_URLCONF = "aped_config.urls"
+AUTH_USER_MODEL = "account.CustomUser"
+AUTHENTICATION_BACKENDS = [
+    "account.backends.StaffIdentifierBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 TEMPLATES = [{
     "BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [BASE_DIR / "templates"],
     "APP_DIRS": True, "OPTIONS": {"context_processors": [

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }} · APED{% endblock %}
+{% block content %}
+<div class="form-narrow" style="max-width: 900px;">
+  <a href="{% url 'staff_list' %}">← Staff accounts</a>
+  <div class="eyebrow mt-3">STAFF ACCOUNT</div>
+  <h1 class="page-title">{{ page_title }}</h1>
+  {% if not staff_member %}<p class="text-muted">A secure staff ID, username and temporary password will be generated automatically and emailed to the staff member.</p>{% endif %}
+  <form method="post" class="panel p-4 mt-3">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="row g-3">
+      <div class="col-12"><h2 class="h5 mb-0">Identity and contact</h2></div>
+      {% if staff_member %}<div class="col-md-6"><label class="form-label">Staff ID</label><input class="form-control" value="{{ staff_member.staff_id }}" readonly><div class="form-text">Staff ID is permanent and cannot be changed.</div></div>{% endif %}
+      {% for field in form %}
+        {% if field.name == 'first_name' or field.name == 'last_name' or field.name == 'email' or field.name == 'username' or field.name == 'phone' %}
+          <div class="col-md-6">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+      <div class="col-12 mt-4"><h2 class="h5 mb-0">Role and placement</h2></div>
+      {% for field in form %}
+        {% if field.name == 'role' or field.name == 'job_title' or field.name == 'department' or field.name == 'location' %}
+          <div class="col-md-6">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% if form.is_active %}<div class="col-12 mt-2"><div class="form-check">{{ form.is_active }}<label class="form-check-label" for="{{ form.is_active.id_for_label }}">Account is active</label></div></div>{% endif %}
+    </div>
+    <div class="d-flex gap-2 mt-4"><a href="{% url 'staff_list' %}" class="btn btn-light">Cancel</a><button class="btn btn-primary">Save staff account</button></div>
+  </form>
+</div>
+{% endblock %}

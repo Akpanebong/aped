@@ -13,6 +13,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet
 from .forms import ActivityForm, FieldAttendanceForm, FieldAttendanceParticipantFormSet, ProjectForm
 from .models import Activity, FieldAttendance, Project
+from account.permissions import approval_required, create_required, edit_required, system_admin_required
 
 
 @login_required
@@ -60,6 +61,7 @@ def project_list(request):
     )
 
 @login_required
+@create_required
 def project_create(request):
     form = ProjectForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -75,6 +77,7 @@ def activity_list(request):
 
 
 @login_required
+@create_required
 def activity_create(request):
     form = ActivityForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
@@ -121,6 +124,7 @@ def filtered_attendance_sheets(request):
 
 
 @login_required
+@create_required
 def attendance_create(request):
     sheet = FieldAttendance()
     initial = {}
@@ -145,6 +149,7 @@ def attendance_create(request):
 
 
 @login_required
+@edit_required
 def attendance_update(request, pk):
     sheet = get_object_or_404(FieldAttendance, pk=pk)
     form = FieldAttendanceForm(request.POST or None, instance=sheet)
@@ -170,6 +175,7 @@ def attendance_detail(request, pk):
 
 
 @login_required
+@system_admin_required
 def attendance_delete(request, pk):
     sheet = get_object_or_404(FieldAttendance, pk=pk)
     if request.method == 'POST':
@@ -179,6 +185,7 @@ def attendance_delete(request, pk):
 
 
 @login_required
+@approval_required
 def attendance_approve(request, pk):
     sheet = get_object_or_404(FieldAttendance, pk=pk)
     if request.method == 'POST':
@@ -192,6 +199,7 @@ def attendance_approve(request, pk):
 
 
 @login_required
+@approval_required
 def attendance_reject(request, pk):
     sheet = get_object_or_404(FieldAttendance, pk=pk)
     if request.method == 'POST':

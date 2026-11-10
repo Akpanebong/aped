@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 from openpyxl import Workbook
 
 from .access import vsla_access_required
+from account.permissions import approval_required, create_required, edit_required
 from .forms import VSLAGroupForm, VSLAMemberForm, SavingsTransactionForm, LoanForm, LoanRepaymentForm, VSLA_MeetingForm, SocialFundTransactionForm, VSLAChallengeStoryForm
 from .models import VSLAGroup, VSLAMember, SavingsTransaction, Loan, LoanRepayment, VSLA_Meeting, MeetingAttendance, SocialFundTransaction, VSLAChallengeStory, LedgerEntry
 
@@ -334,6 +335,7 @@ def group_list(request):
 
 
 @vsla_access_required
+@create_required
 def group_create(request):
     form = VSLAGroupForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -375,6 +377,7 @@ def member_list(request):
 
 
 @vsla_access_required
+@create_required
 def member_create(request):
     initial = {}
     group_id = request.GET.get("group")
@@ -425,6 +428,7 @@ def savings_list(request):
 
 
 @vsla_access_required
+@create_required
 def savings_create(request):
     initial = {}
     member_id = request.GET.get("member")
@@ -472,6 +476,7 @@ def loan_list(request):
 
 
 @vsla_access_required
+@create_required
 def loan_create(request):
     initial = {}
     member_id = request.GET.get("member")
@@ -502,6 +507,7 @@ def loan_detail(request, loan_no):
 
 @vsla_access_required
 @require_POST
+@create_required
 def loan_submit(request, loan_no):
     loan = get_object_or_404(Loan, loan_no=loan_no)
     if loan.status != Loan.Status.DRAFT:
@@ -515,6 +521,7 @@ def loan_submit(request, loan_no):
 
 @vsla_access_required
 @require_POST
+@approval_required
 def loan_decision(request, loan_no):
     if not (request.user.has_perm("vsla.review_vsla_loan") or request.user.has_perm("vsla.approve_vsla_loan") or request.user.is_superuser or request.user.is_staff):
         return HttpResponseForbidden("You do not have permission to review loans.")
@@ -562,6 +569,7 @@ def loan_decision(request, loan_no):
 
 @vsla_access_required
 @require_POST
+@create_required
 def repayment_create(request, loan_no):
     loan = get_object_or_404(Loan, loan_no=loan_no)
     form = LoanRepaymentForm(request.POST)
@@ -603,6 +611,7 @@ def meeting_list(request):
 
 
 @vsla_access_required
+@create_required
 def meeting_create(request):
     initial = {}
     group_id = request.GET.get("group")
@@ -643,6 +652,7 @@ def social_fund_list(request):
 
 
 @vsla_access_required
+@create_required
 def social_fund_create(request):
     initial = {}
     member_id = request.GET.get("member")
@@ -720,6 +730,7 @@ def challenge_story_list(request):
 
 
 @vsla_access_required
+@create_required
 def challenge_story_create(request):
     initial = {}
     group_id = request.GET.get("group")

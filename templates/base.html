@@ -122,7 +122,7 @@
                     </a>
 
                     <ul
-                        class="dropdown-menu shadow"
+                        class="dropdown-menu shadow workspace-menu"
                         aria-labelledby="workspaceDropdown"
                     >
                         <li>
@@ -169,16 +169,24 @@
                             </a>
                         </li>
 
-                        {% if request.user.is_staff %}
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-
-                            <li>
-                                <a class="dropdown-item" href="{% url 'admin:index' %}">
-                                    <i class="bi bi-gear me-2"></i>
-                                    Administration
+                        {% if request.user.is_authenticated %}
+                            <li class="dropdown-submenu">
+                                <a class="dropdown-item settings-toggle" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                    <i class="bi bi-sliders me-2"></i>
+                                    Settings <i class="bi bi-chevron-right settings-chevron ms-auto" aria-hidden="true"></i>
                                 </a>
+                                <ul class="dropdown-menu shadow settings-menu">
+                                    {% if request.user.is_staff %}
+                                        <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2"></i>Administration</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}
+                                    <li><a class="dropdown-item" href="{% url 'my_profile' %}"><i class="bi bi-person-circle me-2"></i>My profile</a></li>
+                                    {% if request.user.is_superuser or request.user.role == 'system_admin' %}
+                                        <li><a class="dropdown-item" href="{% url 'staff_list' %}"><i class="bi bi-people me-2"></i>Staff accounts</a></li>
+                                    {% endif %}
+                                    <li><a class="dropdown-item" href="{% url 'my_profile_update' %}"><i class="bi bi-person-gear me-2"></i>Change username</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'password_change' %}"><i class="bi bi-key me-2"></i>Change password</a></li>
+                                </ul>
                             </li>
                         {% endif %}
                     </ul>

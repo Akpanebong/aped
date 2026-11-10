@@ -175,6 +175,63 @@ a:hover {
     text-decoration: none;
 }
 
+/* Settings is a nested workspace menu and opens on hover for desktop users. */
+.workspace-menu .dropdown-submenu {
+    position: relative;
+}
+
+.workspace-menu .dropdown-submenu::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -.55rem;
+    width: .55rem;
+    height: 100%;
+}
+
+.workspace-menu .dropdown-submenu > .settings-menu {
+    top: -0.45rem;
+    left: 100%;
+    margin-top: 0;
+    display: none;
+}
+
+.workspace-menu .dropdown-submenu:hover > .settings-menu,
+.workspace-menu .dropdown-submenu:focus-within > .settings-menu {
+    display: block;
+}
+
+.workspace-menu .settings-toggle {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.workspace-menu .settings-chevron {
+    margin-left: auto;
+    font-size: .75rem;
+    transition: transform .15s ease;
+}
+
+.workspace-menu .dropdown-submenu:hover > .settings-toggle .settings-chevron,
+.workspace-menu .dropdown-submenu:focus-within > .settings-toggle .settings-chevron {
+    transform: translateX(2px);
+}
+
+@media (max-width: 991.98px) {
+    .workspace-menu .dropdown-submenu > .settings-menu {
+        position: static;
+        margin-left: .75rem;
+        border: 0;
+        box-shadow: none !important;
+    }
+
+    .workspace-menu .dropdown-submenu:hover > .settings-menu,
+    .workspace-menu .dropdown-submenu:focus-within > .settings-menu {
+        display: block;
+    }
+}
+
 .brand-mark {
     display: inline-grid;
     width: 36px;
