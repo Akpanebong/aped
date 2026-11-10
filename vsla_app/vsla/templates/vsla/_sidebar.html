@@ -1,0 +1,26 @@
+<div class="vsla-sidebar">
+  <div class="vsla-brand"><span class="vsla-brand-icon"><i class="bi bi-piggy-bank"></i></span><span><strong>VSLA</strong><small>COMMUNITY FINANCE</small></span></div>
+  <nav class="vsla-nav">
+    <a href="{% url 'vsla:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-grid-1x2"></i> Overview</a>
+    <div class="vsla-nav-label">GROUP OPERATIONS</div>
+    <a href="{% url 'vsla:groups' %}"><i class="bi bi-people"></i> VSLA Groups</a>
+    <a href="{% url 'vsla:members' %}"><i class="bi bi-person-vcard"></i> Member Registry</a>
+    <a href="{% url 'vsla:meetings' %}"><i class="bi bi-calendar2-week"></i> Meetings</a>
+    <div class="vsla-nav-label">FINANCIAL LEDGERS</div>
+    <a href="{% url 'vsla:savings' %}"><i class="bi bi-wallet2"></i> Weekly Savings</a>
+    <a href="{% url 'vsla:loans' %}"><i class="bi bi-cash-coin"></i> Loan Portfolio</a>
+    <a href="{% url 'vsla:social_fund' %}"><i class="bi bi-heart-pulse"></i> Social Fund</a>
+    <a href="{% url 'vsla:share_out' %}"><i class="bi bi-calculator"></i> Share-out summary</a>
+    <a href="{% url 'vsla:challenge_stories' %}"><i class="bi bi-journal-text"></i> Challenges &amp; stories</a>
+    <div class="vsla-nav-label">EXPORTS</div>
+    <a href="{% url 'vsla:export_workbook' %}"><i class="bi bi-file-earmark-excel"></i> Workbook export</a>
+    <a href="{% url 'vsla:export_groups' %}"><i class="bi bi-download"></i> Group profile CSV</a>
+    <a href="{% url 'vsla:export_members' %}"><i class="bi bi-download"></i> Member CSV</a>
+    <a href="{% url 'vsla:export_savings' %}"><i class="bi bi-download"></i> Savings CSV</a>
+    <a href="{% url 'vsla:export_loans' %}"><i class="bi bi-download"></i> Loans CSV</a>
+    <a href="{% url 'vsla:export_meetings' %}"><i class="bi bi-download"></i> Meetings CSV</a>
+    <a href="{% url 'vsla:export_social_fund' %}"><i class="bi bi-download"></i> Social fund CSV</a>
+    <a href="{% url 'vsla:export_challenge_stories' %}"><i class="bi bi-download"></i> Challenges CSV</a>
+  </nav>
+  <div class="vsla-sidebar-foot">DDS-NK THRIVE · FIELD SYSTEMS</div>
+</div>

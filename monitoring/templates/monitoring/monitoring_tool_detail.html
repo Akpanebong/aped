@@ -1,0 +1,765 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ monitoring_form.name }} · APED{% endblock %}
+{% block body_class %}aped-form-records-page{% endblock %}
+
+{% block content %}
+<div class="records-workspace">
+
+    <!-- Page header -->
+    <header class="records-workspace-header">
+        <div class="records-workspace-heading">
+            <a href="{% url 'form_catalog' %}" class="records-back-link">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                <span>Monitoring tools</span>
+            </a>
+
+            <div class="records-eyebrow">
+                <i class="bi bi-clipboard2-check" aria-hidden="true"></i>
+                {{ monitoring_form.get_category_display }}
+            </div>
+
+            <h1 class="records-workspace-title">
+                {{ monitoring_form.name }}
+            </h1>
+
+            <p class="records-workspace-description">
+                Browse and manage saved monitoring records for this tool.
+                Select a group or beneficiary to open its record workspace.
+            </p>
+        </div>
+
+        <div class="records-workspace-actions">
+            <a
+                href="{% url 'record_create' %}?form={{ monitoring_form.pk }}"
+                class="btn btn-primary"
+            >
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                Add new record
+            </a>
+        </div>
+    </header>
+
+    <!-- Search and filters -->
+    <section class="records-filter-panel" aria-labelledby="records-filter-title">
+        <div class="records-filter-heading">
+            <div>
+                <h2 id="records-filter-title">
+                    <i class="bi bi-funnel me-2" aria-hidden="true"></i>
+                    Find records
+                </h2>
+                <p>Search this monitoring tool's register or filter by submission status.</p>
+            </div>
+
+            {% if filters.q or filters.status %}
+                <a
+                    href="{% url 'form_records' monitoring_form.pk %}"
+                    class="records-clear-link"
+                >
+                    <i class="bi bi-x-circle me-1" aria-hidden="true"></i>
+                    Clear filters
+                </a>
+            {% endif %}
+        </div>
+
+        <form method="get" action="{% url 'form_records' monitoring_form.pk %}">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-lg-6">
+                    <label for="record-search" class="form-label">
+                        Search groups and records
+                    </label>
+                    <div class="records-search-input">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <input
+                            type="search"
+                            id="record-search"
+                            name="q"
+                            class="form-control"
+                            value="{{ filters.q|default:'' }}"
+                            placeholder="Group name, ID, location or reference"
+                        >
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <label for="record-status" class="form-label">
+                        Submission status
+                    </label>
+                    <select
+                        id="record-status"
+                        name="status"
+                        class="form-select"
+                    >
+                        <option value="">All statuses</option>
+                        <option value="draft" {% if filters.status == "draft" %}selected{% endif %}>
+                            Draft
+                        </option>
+                        <option value="submitted" {% if filters.status == "submitted" %}selected{% endif %}>
+                            Submitted
+                        </option>
+                        <option value="reviewed" {% if filters.status == "reviewed" %}selected{% endif %}>
+                            Reviewed
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="records-filter-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search me-1" aria-hidden="true"></i>
+                            Apply filters
+                        </button>
+
+                        <a
+                            href="{% url 'form_records' monitoring_form.pk %}"
+                            class="btn btn-light border"
+                        >
+                            Reset
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </section>
+
+    <!-- Records register -->
+    <section class="records-register-panel">
+        <div class="records-register-heading">
+            <div>
+                <h2>Saved records</h2>
+                <p>
+                    Monitoring records associated with this tool.
+                </p>
+            </div>
+
+            <div class="records-register-count">
+                <span class="records-count-number">{{ records|length }}</span>
+                <span>
+                    record{{ records|length|pluralize }}
+                </span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table records-workspace-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Group / beneficiary</th>
+                        <th scope="col">Record ID</th>
+                        <th scope="col">Visit date</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for record in records %}
+                        <tr>
+                            <td>
+                                <div class="records-beneficiary-cell">
+                                    <a
+                                        href="{% url 'record_detail' record.pk %}"
+                                        class="records-beneficiary-name"
+                                    >
+                                        {{ record.group_or_beneficiary|default:"Unnamed group / beneficiary" }}
+                                    </a>
+
+                                    <span class="records-project-name">
+                                        <i class="bi bi-folder2-open me-1" aria-hidden="true"></i>
+                                        {{ record.project_name|default:"No project specified" }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="records-reference">
+                                    {{ record.reference|default:"—" }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="records-date">
+                                    {% if record.visit_date %}
+                                        {{ record.visit_date|date:"d M Y" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="records-location">
+                                    <span>{{ record.location|default:"Location not specified" }}</span>
+
+                                    {% if record.district %}
+                                        <small>{{ record.district }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="status status-{{ record.status }}">
+                                    {{ record.get_status_display }}
+                                </span>
+                            </td>
+
+                            <td class="text-end">
+                                <a
+                                    href="{% url 'record_detail' record.pk %}"
+                                    class="records-open-link"
+                                    aria-label="Open record {{ record.reference|default:record.pk }}"
+                                >
+                                    Open
+                                    <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="records-workspace-empty">
+                                    <div class="records-empty-icon">
+                                        <i class="bi bi-clipboard2-x" aria-hidden="true"></i>
+                                    </div>
+
+                                    <h3>No monitoring records found</h3>
+
+                                    {% if filters.q or filters.status %}
+                                        <p>
+                                            No records match your current search or filters.
+                                            Try changing your search criteria.
+                                        </p>
+
+                                        <a
+                                            href="{% url 'form_records' monitoring_form.pk %}"
+                                            class="btn btn-outline-primary border"
+                                        >
+                                            <i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>
+                                            Clear filters
+                                        </a>
+                                    {% else %}
+                                        <p>
+                                            This monitoring tool does not have any saved
+                                            records yet. Create the first record to start
+                                            building its register.
+                                        </p>
+
+                                        <a
+                                            href="{% url 'record_create' %}?form={{ monitoring_form.pk }}"
+                                            class="btn btn-outline-primary"
+                                        >
+                                            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                                            Create first record
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if records %}
+            <div class="records-register-footer">
+                <span>
+                    <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                    Showing records for {{ monitoring_form.name }}.
+                </span>
+            </div>
+        {% endif %}
+    </section>
+
+</div>
+<style>
+
+/* =========================================================
+   APED MONITORING TOOL RECORDS
+   Records workspace and register
+   ========================================================= */
+
+.aped-form-records-page {
+    --records-border: var(--border, #e5ebe7);
+    --records-muted: var(--text-muted, #718078);
+    --records-forest: var(--forest, #173e33);
+}
+
+.aped-form-records-page .records-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Page header */
+
+.records-workspace-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding-bottom: 1.35rem;
+    border-bottom: 1px solid var(--records-border);
+}
+
+.records-workspace-heading {
+    min-width: 0;
+    max-width: 760px;
+}
+
+.records-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--records-muted);
+    font-size: .84rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color .2s ease;
+}
+
+.records-back-link:hover {
+    color: var(--records-forest);
+}
+
+.records-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin-top: 1.15rem;
+    margin-bottom: .45rem;
+    color: var(--records-forest);
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+.records-workspace-title {
+    margin: 0;
+    color: var(--heading-color, #20382e);
+    font-size: clamp(1.65rem, 3vw, 2.2rem);
+    font-weight: 750;
+    line-height: 1.2;
+    letter-spacing: -.035em;
+    overflow-wrap: anywhere;
+}
+
+.records-workspace-description {
+    max-width: 650px;
+    margin: .65rem 0 0;
+    color: var(--records-muted);
+    font-size: .92rem;
+    line-height: 1.65;
+}
+
+.records-workspace-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+}
+
+.records-workspace-actions .btn {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 650;
+}
+
+/* Filter panel */
+
+.records-filter-panel,
+.records-register-panel {
+    overflow: hidden;
+    background: var(--surface, #fff);
+    border: 1px solid var(--records-border);
+    border-radius: var(--card-radius, 14px);
+    box-shadow: var(--shadow-card, 0 3px 14px rgb(24 49 38 / 4%));
+}
+
+.records-filter-panel {
+    padding: 1.25rem;
+}
+
+.records-filter-heading,
+.records-register-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.records-filter-heading {
+    margin-bottom: 1.15rem;
+}
+
+.records-filter-heading h2,
+.records-register-heading h2 {
+    margin: 0;
+    color: var(--heading-color, #20382e);
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+.records-filter-heading h2 i {
+    color: var(--records-forest);
+}
+
+.records-filter-heading p,
+.records-register-heading p {
+    margin: .3rem 0 0;
+    color: var(--records-muted);
+    font-size: .82rem;
+}
+
+.records-clear-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--records-muted);
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.records-clear-link:hover {
+    color: #b54747;
+}
+
+.records-filter-panel .form-label {
+    margin-bottom: .45rem;
+    color: #43534a;
+    font-size: .8rem;
+    font-weight: 650;
+}
+
+.records-filter-panel .form-control,
+.records-filter-panel .form-select {
+    min-height: 43px;
+    border-color: var(--records-border);
+    border-radius: 8px;
+    font-size: .85rem;
+    box-shadow: none;
+}
+
+.records-filter-panel .form-control:focus,
+.records-filter-panel .form-select:focus {
+    border-color: var(--forest, #173e33);
+    box-shadow: 0 0 0 .2rem rgb(23 62 51 / 9%);
+}
+
+.records-search-input {
+    position: relative;
+}
+
+.records-search-input > i {
+    position: absolute;
+    top: 50%;
+    left: .85rem;
+    z-index: 2;
+    color: #89958e;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.records-search-input .form-control {
+    padding-left: 2.35rem;
+}
+
+.records-filter-actions {
+    display: flex;
+    gap: .5rem;
+}
+
+.records-filter-actions .btn {
+    min-height: 43px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .82rem;
+    font-weight: 650;
+}
+
+.records-filter-actions .btn-primary {
+    flex: 1;
+}
+
+/* Register heading */
+
+.records-register-heading {
+    align-items: center;
+    padding: 1.25rem 1.35rem;
+    border-bottom: 1px solid var(--records-border);
+}
+
+.records-register-count {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .4rem .7rem;
+    color: var(--records-muted);
+    background: #f4f7f5;
+    border-radius: 30px;
+    font-size: .76rem;
+    font-weight: 600;
+}
+
+.records-count-number {
+    color: var(--records-forest);
+    font-size: .9rem;
+    font-weight: 800;
+}
+
+/* Records table */
+
+.records-workspace-table {
+    min-width: 850px;
+}
+
+.records-workspace-table thead th {
+    padding: .85rem 1.1rem;
+    color: #69776f;
+    background: #f8faf9;
+    border-bottom: 1px solid var(--records-border);
+    font-size: .7rem;
+    font-weight: 750;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.records-workspace-table tbody td {
+    padding: 1rem 1.1rem;
+    border-color: #edf1ee;
+    color: #43534a;
+    font-size: .84rem;
+    vertical-align: middle;
+}
+
+.records-workspace-table tbody tr {
+    transition: background .15s ease;
+}
+
+.records-workspace-table tbody tr:hover {
+    background: #fafcfb;
+}
+
+.records-beneficiary-cell {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    min-width: 175px;
+}
+
+.records-beneficiary-name {
+    color: var(--records-forest);
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+}
+
+.records-beneficiary-name:hover {
+    color: var(--primary, #245b47);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.records-project-name {
+    color: var(--records-muted);
+    font-size: .74rem;
+}
+
+.records-reference {
+    display: inline-block;
+    padding: .25rem .45rem;
+    color: #53645a;
+    background: #f3f6f4;
+    border: 1px solid #e8eeea;
+    border-radius: 5px;
+    font-size: .75rem;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.records-date {
+    color: #536158;
+    font-size: .81rem;
+    white-space: nowrap;
+}
+
+.records-location {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    min-width: 110px;
+}
+
+.records-location span {
+    color: #43534a;
+    font-weight: 550;
+}
+
+.records-location small {
+    color: var(--records-muted);
+    font-size: .73rem;
+}
+
+/* Status labels */
+
+.records-workspace-page .status,
+.aped-form-records-page .status {
+    display: inline-flex;
+    align-items: center;
+    padding: .32rem .65rem;
+    border-radius: 30px;
+    font-size: .7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.aped-form-records-page .status-draft {
+    color: #805b16;
+    background: #fff6df;
+}
+
+.aped-form-records-page .status-submitted {
+    color: #245d91;
+    background: #eaf3fc;
+}
+
+.aped-form-records-page .status-reviewed {
+    color: #24734c;
+    background: #e8f5ed;
+}
+
+/* Open action */
+
+.records-open-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    color: var(--records-forest);
+    font-size: .79rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.records-open-link:hover {
+    color: #24734c;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Empty state */
+
+.records-workspace-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+}
+
+.records-empty-icon {
+    display: grid;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 1rem;
+    place-items: center;
+    color: var(--records-forest);
+    background: #edf5f0;
+    border-radius: 16px;
+    font-size: 1.45rem;
+}
+
+.records-workspace-empty h3 {
+    margin: 0;
+    color: var(--heading-color, #20382e);
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+.records-workspace-empty p {
+    max-width: 440px;
+    margin: .55rem 0 1.1rem;
+    color: var(--records-muted);
+    font-size: .84rem;
+    line-height: 1.65;
+}
+
+.records-workspace-empty .btn {
+    font-size: .82rem;
+    font-weight: 650;
+}
+
+/* Register footer */
+
+.records-register-footer {
+    padding: .8rem 1.25rem;
+    color: var(--records-muted);
+    background: #fafcfb;
+    border-top: 1px solid var(--records-border);
+    font-size: .75rem;
+}
+
+/* Responsive */
+
+@media (max-width: 767.98px) {
+    .records-workspace {
+        gap: 1.1rem;
+    }
+
+    .records-workspace-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .records-workspace-actions {
+        width: 100%;
+    }
+
+    .records-workspace-actions .btn {
+        width: 100%;
+    }
+
+    .records-filter-panel {
+        padding: 1rem;
+    }
+
+    .records-filter-actions {
+        width: 100%;
+    }
+
+    .records-filter-actions .btn {
+        flex: 1;
+    }
+
+    .records-register-heading {
+        padding: 1rem;
+    }
+
+    .records-workspace-table thead th,
+    .records-workspace-table tbody td {
+        padding: .8rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .records-back-link,
+    .records-workspace-table tbody tr {
+        transition: none;
+    }
+}
+
+</style>
+{% endblock %}

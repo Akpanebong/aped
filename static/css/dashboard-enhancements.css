@@ -1,0 +1,416 @@
+
+/* ==========================================================================
+   APED MONITORING SYSTEM
+   ENTERPRISE DASHBOARD PRESENTATION LAYER
+   Dependencies: aped.css, aped_enhancements.css
+   ========================================================================== */
+
+
+/* 1. DASHBOARD FOUNDATION
+   ========================================================================== */
+
+.dashboard-shell {
+    min-width: 0;
+    padding-bottom: 42px;
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 26px;
+}
+
+.dashboard-subtitle {
+    max-width: 720px;
+    margin-top: 7px;
+    color: var(--muted);
+}
+
+.dashboard-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+
+/* 2. LIVE STATUS INDICATOR
+   ========================================================================== */
+
+.dashboard-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 9px;
+    border: 1px solid #dfeae2;
+    border-radius: var(--radius-pill);
+    background: #f7faf7;
+    color: var(--forest2);
+    font-size: 10px;
+    font-weight: 750;
+}
+
+.dashboard-live-dot {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+    border-radius: 50%;
+    background: #4d9c67;
+    box-shadow: 0 0 0 3px #e4f5e9;
+}
+
+
+/* 3. DASHBOARD KPI CARDS
+   ========================================================================== */
+
+.dashboard-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.dashboard-kpi {
+    min-width: 0;
+    min-height: 142px;
+    padding: 19px 20px;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.dashboard-kpi:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.dashboard-kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.dashboard-kpi-icon {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    place-items: center;
+    border-radius: 9px;
+    background: var(--surface-green);
+    color: var(--forest2);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+
+/* 4. DASHBOARD FILTERS
+   ========================================================================== */
+
+.dashboard-filter {
+    padding: 18px 20px 20px;
+}
+
+.dashboard-filter-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 17px;
+}
+
+.dashboard-section-kicker {
+    display: block;
+    margin-bottom: 4px;
+    color: #6c8879;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+.dashboard-filter-heading h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.dashboard-filter-clear {
+    color: var(--forest2);
+    font-size: 11px;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.dashboard-filter-clear:hover {
+    text-decoration: underline;
+}
+
+.dashboard-filter .form-label {
+    margin-bottom: 6px;
+}
+
+.dashboard-filter-submit {
+    min-height: 40px;
+}
+
+.dashboard-district-input {
+    max-width: 360px;
+}
+
+
+/* 5. DASHBOARD PANELS
+   ========================================================================== */
+
+.dashboard-panel-heading {
+    min-height: 82px;
+}
+
+.dashboard-panel-link {
+    white-space: nowrap;
+}
+
+.dashboard-panel-footer {
+    padding: 14px 18px 18px;
+    border-top: 1px solid var(--border-soft);
+}
+
+
+/* 6. DASHBOARD TABLES
+   ========================================================================== */
+
+.dashboard-table {
+    min-width: 640px;
+    font-size: 12px;
+}
+
+.dashboard-table tbody tr {
+    transition: background-color .12s ease;
+}
+
+.dashboard-table tbody tr:hover {
+    background: #fbfdfb;
+}
+
+.dashboard-record-link {
+    display: inline-block;
+    font-size: 12px;
+}
+
+.dashboard-record-meta {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.dashboard-tool-name {
+    color: #3d5048;
+    font-weight: 600;
+}
+
+
+/* 7. DASHBOARD MONITORING TOOLS
+   ========================================================================== */
+
+.dashboard-tool-list {
+    padding-inline: 17px;
+}
+
+.dashboard-tool-item {
+    padding: 14px 3px;
+}
+
+.dashboard-tool-item:hover {
+    background: linear-gradient(90deg, transparent, #fbfdfb);
+}
+
+.dashboard-tool-copy {
+    min-width: 0;
+}
+
+.dashboard-tool-copy strong,
+.dashboard-tool-copy small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-tool-copy small {
+    margin-top: 3px;
+    color: var(--muted);
+}
+
+.dashboard-tool-arrow {
+    flex: 0 0 auto;
+    margin-left: auto;
+    color: #6b8779;
+    font-weight: 800;
+}
+
+.dashboard-tools-empty {
+    padding: 24px 4px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.dashboard-tools-empty strong {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--ink);
+}
+
+.dashboard-tools-empty p {
+    margin: 0;
+    line-height: 1.65;
+}
+
+
+/* 8. DASHBOARD EMPTY STATES
+   ========================================================================== */
+
+.dashboard-empty-state {
+    display: grid;
+    min-height: 270px;
+    align-content: center;
+    justify-items: center;
+}
+
+
+/* 9. DASHBOARD ACTION TRACKING
+   ========================================================================== */
+
+.dashboard-actions-panel {
+    overflow: hidden;
+}
+
+.dashboard-actions-table {
+    min-width: 760px;
+}
+
+.dashboard-actions-table td:first-child {
+    min-width: 280px;
+}
+
+.dashboard-action-title {
+    color: var(--ink);
+    font-weight: 650;
+}
+
+.dashboard-actions-empty {
+    display: flex;
+    align-items: center;
+    min-height: 110px;
+    padding: 24px;
+    background: #fbfdfb;
+}
+
+.dashboard-actions-empty strong {
+    font-size: 12px;
+}
+
+.dashboard-actions-empty p {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+
+/* 10. LARGE TABLETS AND SMALL LAPTOPS
+   ========================================================================== */
+
+@media (max-width: 1199.98px) {
+
+    .dashboard-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* 11. TABLETS AND MOBILE
+   ========================================================================== */
+
+@media (max-width: 767.98px) {
+
+    .dashboard-header {
+        align-items: flex-start;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+
+    .dashboard-header-actions {
+        width: 100%;
+    }
+
+    .dashboard-header-actions .btn {
+        flex: 1 1 auto;
+    }
+
+    .dashboard-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .dashboard-kpi {
+        min-height: 125px;
+        padding: 16px;
+    }
+
+    .dashboard-filter {
+        padding: 15px;
+    }
+
+    .dashboard-filter-heading {
+        align-items: flex-start;
+    }
+
+    .dashboard-district-input {
+        max-width: none;
+    }
+
+    .dashboard-panel-heading {
+        padding: 16px;
+    }
+
+    .dashboard-table {
+        min-width: 680px;
+    }
+
+    .dashboard-actions-table {
+        min-width: 760px;
+    }
+}
+
+
+/* 12. VERY SMALL PHONES
+   ========================================================================== */
+
+@media (max-width: 420px) {
+
+    .dashboard-kpis {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-header-actions {
+        flex-direction: column;
+    }
+
+    .dashboard-header-actions .btn {
+        width: 100%;
+    }
+}
+
+
+/* 13. REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .dashboard-kpi,
+    .dashboard-table tbody tr {
+        transition: none;
+    }
+
+    .dashboard-kpi:hover {
+        transform: none;
+    }
+}

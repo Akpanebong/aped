@@ -1,0 +1,649 @@
+
+{% extends "base.html" %}
+
+{% block title %}Dashboard | APED Monitoring{% endblock %}
+{% block body_class %}aped-dashboard-page{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-shell">
+
+    <!-- ============================================================
+         EXECUTIVE HEADER
+         ============================================================ -->
+
+    <header class="dashboard-header">
+
+        <div class="dashboard-header-content">
+            <div class="eyebrow">
+                MONITORING, EVALUATION &amp; LEARNING
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <h1 class="page-title mb-0">
+                    Programme dashboard
+                </h1>
+
+                <span class="dashboard-live-badge">
+                    <span class="dashboard-live-dot"></span>
+                    Live workspace
+                </span>
+            </div>
+
+            <p class="text-muted mb-0 dashboard-subtitle">
+                Programme performance, field evidence and follow-up actions
+                in one operational view.
+            </p>
+        </div>
+
+        <div class="dashboard-header-actions">
+
+            <a class="btn btn-outline-primary"
+               href="{% url 'record_list' %}">
+                <i class="bi bi-journal-text me-1"></i>
+                View records
+            </a>
+
+            <a class="btn btn-primary"
+               href="{% url 'record_create' %}">
+                <i class="bi bi-plus-lg me-1"></i>
+                New field record
+            </a>
+
+        </div>
+    </header>
+
+
+    <!-- ============================================================
+         PROGRAMME KPI METRICS
+         ============================================================ -->
+
+    <section class="dashboard-kpis mb-4"
+             aria-label="Programme performance metrics">
+
+        {% for label, value, foot in metric_cards %}
+
+            <article class="metric-card dashboard-kpi">
+
+                <div class="dashboard-kpi-top">
+                    <span class="metric-label">
+                        {{ label }}
+                    </span>
+
+                    <span class="dashboard-kpi-icon" aria-hidden="true">
+                        {% if forloop.counter == 1 %}
+                            <i class="bi bi-clipboard-data"></i>
+                        {% elif forloop.counter == 2 %}
+                            <i class="bi bi-check-circle"></i>
+                        {% elif forloop.counter == 3 %}
+                            <i class="bi bi-clock-history"></i>
+                        {% else %}
+                            <i class="bi bi-graph-up-arrow"></i>
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="metric-value">
+                    {{ value }}
+                </div>
+
+                <span class="metric-foot">
+                    {{ foot }}
+                </span>
+
+            </article>
+
+        {% empty %}
+
+            <div class="dashboard-metrics-empty">
+                <p class="text-muted mb-0">
+                    Programme metrics are not currently available.
+                </p>
+            </div>
+
+        {% endfor %}
+
+    </section>
+
+
+    <!-- ============================================================
+         DASHBOARD FILTERS
+         ============================================================ -->
+
+    <section class="filter-bar dashboard-filter mb-4"
+             aria-labelledby="dashboard-filter-heading">
+
+        <div class="dashboard-filter-heading">
+
+            <div>
+                <span class="dashboard-section-kicker">
+                    CONTROL CENTRE
+                </span>
+
+                <h2 id="dashboard-filter-heading">
+                    Refine programme view
+                </h2>
+
+                <p class="text-muted small mb-0">
+                    Filter monitoring records by tool, status, date or district.
+                </p>
+            </div>
+
+            <a class="dashboard-filter-clear"
+               href="{% url 'dashboard' %}">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                Reset filters
+            </a>
+
+        </div>
+
+        <form method="get"
+              action="{% url 'dashboard' %}"
+              class="dashboard-filter-form">
+
+            <div class="row g-3">
+
+                <!-- Search -->
+                <div class="col-12 col-xl-3">
+
+                    <label class="form-label" for="dashboard-q">
+                        Search records
+                    </label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+
+                        <input
+                            id="dashboard-q"
+                            type="search"
+                            class="form-control"
+                            name="q"
+                            value="{{ filters.q|default:'' }}"
+                            placeholder="Reference, location, group..."
+                        >
+                    </div>
+
+                </div>
+
+
+                <!-- Monitoring tool -->
+                <div class="col-12 col-md-6 col-xl-2">
+
+                    <label class="form-label" for="dashboard-form">
+                        Monitoring tool
+                    </label>
+
+                    <select id="dashboard-form"
+                            class="form-select"
+                            name="form">
+
+                        <option value="">All tools</option>
+
+                        {% for f in forms %}
+                            <option value="{{ f.pk }}"
+                                {% if filters.form == f.pk|stringformat:"s" %}
+                                    selected
+                                {% endif %}>
+                                {{ f.name }}
+                            </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- Record status -->
+                <div class="col-12 col-md-6 col-xl-2">
+
+                    <label class="form-label" for="dashboard-status">
+                        Status
+                    </label>
+
+                    <select id="dashboard-status"
+                            class="form-select"
+                            name="status">
+
+                        <option value="">All statuses</option>
+
+                        <option value="draft"
+                            {% if filters.status == "draft" %}selected{% endif %}>
+                            Draft
+                        </option>
+
+                        <option value="submitted"
+                            {% if filters.status == "submitted" %}selected{% endif %}>
+                            Submitted
+                        </option>
+
+                        <option value="reviewed"
+                            {% if filters.status == "reviewed" %}selected{% endif %}>
+                            Reviewed
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Start date -->
+                <div class="col-12 col-md-6 col-xl-2">
+
+                    <label class="form-label" for="dashboard-start">
+                        From date
+                    </label>
+
+                    <input
+                        id="dashboard-start"
+                        type="date"
+                        class="form-control"
+                        name="start"
+                        value="{{ filters.start|default:'' }}"
+                    >
+
+                </div>
+
+
+                <!-- End date -->
+                <div class="col-12 col-md-6 col-xl-2">
+
+                    <label class="form-label" for="dashboard-end">
+                        To date
+                    </label>
+
+                    <input
+                        id="dashboard-end"
+                        type="date"
+                        class="form-control"
+                        name="end"
+                        value="{{ filters.end|default:'' }}"
+                    >
+
+                </div>
+
+
+                <!-- Apply -->
+                <div class="col-12 col-xl-1 d-flex align-items-end">
+
+                    <button type="submit"
+                            class="btn btn-primary w-100 dashboard-filter-submit">
+                        <i class="bi bi-funnel me-1"></i>
+                        Apply
+                    </button>
+
+                </div>
+
+
+                <!-- District -->
+                <div class="col-12 col-md-6 col-xl-4">
+
+                    <label class="form-label" for="dashboard-district">
+                        District
+                    </label>
+
+                    <input
+                        id="dashboard-district"
+                        type="text"
+                        class="form-control dashboard-district-input"
+                        name="district"
+                        value="{{ filters.district|default:'' }}"
+                        placeholder="Enter district"
+                    >
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- ============================================================
+         MAIN OPERATIONAL DASHBOARD
+         ============================================================ -->
+
+    <div class="row g-4 mb-4">
+
+        <!-- RECENT MONITORING RECORDS -->
+        <div class="col-12 col-xl-8">
+
+            <section class="panel h-100 dashboard-panel">
+
+                <div class="panel-heading dashboard-panel-heading">
+
+                    <div>
+                        <span class="dashboard-section-kicker">
+                            FIELD INTELLIGENCE
+                        </span>
+
+                        <h2>Recent monitoring records</h2>
+
+                        <p>
+                            Latest visits, submissions and evidence entering the system.
+                        </p>
+                    </div>
+
+                    <a class="dashboard-panel-link"
+                       href="{% url 'record_list' %}">
+                        View all
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+
+                </div>
+
+
+                {% if recent_records %}
+
+                    <div class="table-responsive">
+
+                        <table class="table dashboard-table align-middle">
+
+                            <thead>
+                                <tr>
+                                    <th scope="col">Record</th>
+                                    <th scope="col">Monitoring tool</th>
+                                    <th scope="col">Visit date</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {% for r in recent_records %}
+
+                                    <tr>
+
+                                        <td>
+                                            <a class="dashboard-record-link"
+                                               href="{% url 'record_detail' r.pk %}">
+                                                {{ r.reference }}
+                                            </a>
+
+                                            <div class="dashboard-record-meta">
+                                                <i class="bi bi-geo-alt me-1"></i>
+                                                {{ r.location|default:"Location not set" }}
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <span class="dashboard-tool-name">
+                                                {{ r.form.name }}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            {% if r.visit_date %}
+                                                <time datetime="{{ r.visit_date|date:'Y-m-d' }}">
+                                                    {{ r.visit_date|date:"d M Y" }}
+                                                </time>
+                                            {% else %}
+                                                <span class="text-muted">Not specified</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <span class="status status-{{ r.status }}">
+                                                {{ r.get_status_display }}
+                                            </span>
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-state dashboard-empty-state">
+
+                        <div class="empty-icon">
+                            <i class="bi bi-clipboard-plus"></i>
+                        </div>
+
+                        <h3>Your monitoring workspace is ready</h3>
+
+                        <p>
+                            No monitoring records match the current view.
+                            Create a field record to begin building APED's evidence base.
+                        </p>
+
+                        <a class="btn btn-primary"
+                           href="{% url 'record_create' %}">
+                            <i class="bi bi-plus-lg me-1"></i>
+                            Create first record
+                        </a>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+        </div>
+
+
+        <!-- MONITORING TOOLS -->
+        <div class="col-12 col-xl-4">
+
+            <section class="panel h-100 dashboard-panel">
+
+                <div class="panel-heading dashboard-panel-heading">
+
+                    <div>
+                        <span class="dashboard-section-kicker">
+                            FIELD INSTRUMENTS
+                        </span>
+
+                        <h2>Monitoring tools</h2>
+
+                        <p>
+                            Start a record using the appropriate instrument.
+                        </p>
+                    </div>
+
+                    <a class="dashboard-panel-link"
+                       href="{% url 'form_catalog' %}">
+                        All tools
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+
+                </div>
+
+
+                <div class="tool-mini-list dashboard-tool-list">
+
+                    {% for f in forms %}
+
+                        <a href="{% url 'record_create' %}?form={{ f.pk }}"
+                           class="tool-mini dashboard-tool-item">
+
+                            <span class="tool-symbol">
+                                {{ forloop.counter|stringformat:"02d" }}
+                            </span>
+
+                            <span class="dashboard-tool-copy">
+
+                                <strong>{{ f.name }}</strong>
+
+                                <small>
+                                    {{ f.get_category_display }}
+                                </small>
+
+                            </span>
+
+                            <span class="dashboard-tool-arrow"
+                                  aria-hidden="true">
+                                <i class="bi bi-arrow-up-right"></i>
+                            </span>
+
+                        </a>
+
+                    {% empty %}
+
+                        <div class="dashboard-tools-empty">
+
+                            <div class="dashboard-tools-empty-icon">
+                                <i class="bi bi-ui-checks"></i>
+                            </div>
+
+                            <strong>No monitoring tools configured</strong>
+
+                            <p>
+                                Monitoring instruments need to be configured
+                                before field records can be created.
+                            </p>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                {% if forms %}
+
+                    <div class="dashboard-panel-footer">
+
+                        <a class="btn btn-outline-primary btn-sm w-100"
+                           href="{% url 'form_catalog' %}">
+                            <i class="bi bi-grid me-1"></i>
+                            Browse monitoring catalogue
+                        </a>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================
+         FOLLOW-UP ACTION REGISTER
+         ============================================================ -->
+
+    <section class="panel dashboard-panel dashboard-actions-panel">
+
+        <div class="panel-heading dashboard-panel-heading">
+
+            <div>
+                <span class="dashboard-section-kicker">
+                    ACCOUNTABILITY
+                </span>
+
+                <h2>Follow-up action register</h2>
+
+                <p>
+                    Keep commitments visible, assigned and moving after every field visit.
+                </p>
+            </div>
+
+            <span class="count-bubble">
+                {{ actions|length }}
+                action{{ actions|length|pluralize }}
+            </span>
+
+        </div>
+
+
+        {% if actions %}
+
+            <div class="table-responsive">
+
+                <table class="table dashboard-table dashboard-actions-table align-middle">
+
+                    <thead>
+                        <tr>
+                            <th scope="col">Action</th>
+                            <th scope="col">Record</th>
+                            <th scope="col">Assigned to</th>
+                            <th scope="col">Due date</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for a in actions %}
+
+                            <tr>
+
+                                <td>
+                                    <div class="dashboard-action-title">
+                                        {{ a.action }}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <a href="{% url 'record_detail' a.record.pk %}">
+                                        {{ a.record.reference }}
+                                    </a>
+                                </td>
+
+                                <td>
+                                    {{ a.assigned_to|default:"Unassigned" }}
+                                </td>
+
+                                <td>
+                                    {% if a.due_date %}
+                                        <time datetime="{{ a.due_date|date:'Y-m-d' }}">
+                                            {{ a.due_date|date:"d M Y" }}
+                                        </time>
+                                    {% else %}
+                                        <span class="text-muted">Not set</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <span class="status status-{{ a.status }}">
+                                        {{ a.get_status_display }}
+                                    </span>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="dashboard-actions-empty">
+
+                <div class="dashboard-actions-empty-icon">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+
+                <div>
+                    <strong>No follow-up actions have been logged</strong>
+
+                    <p>
+                        Actions captured during monitoring visits will appear
+                        here for accountability and tracking.
+                    </p>
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+{% endblock %}

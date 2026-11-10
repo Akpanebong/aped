@@ -1,0 +1,567 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title|default:"VSLA Management" }} · APED{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+    /* =========================================================
+       APED · VSLA THEME
+       ========================================================= */
+
+    .vsla-page {
+        --vsla-brand: #245b48;
+        --vsla-brand-dark: #173e33;
+        --vsla-ink: #172b25;
+        --vsla-muted: #718079;
+        --vsla-line: #e3eae5;
+        --vsla-surface: #fff;
+        --vsla-soft: #edf5ed;
+        --vsla-soft-hover: #f5faf6;
+        --vsla-focus: #6da68a;
+
+        color: var(--vsla-ink);
+    }
+
+    /* Typography */
+    .vsla-page h1,
+    .vsla-page h2,
+    .vsla-page h3,
+    .vsla-page h4,
+    .vsla-page strong,
+    .vsla-page .section-title {
+        color: var(--vsla-brand-dark);
+    }
+
+    .vsla-page p,
+    .vsla-page span,
+    .vsla-page td,
+    .vsla-page label {
+        color: var(--vsla-ink);
+    }
+
+    .vsla-page .text-muted,
+    .vsla-page small.text-muted,
+    .vsla-page .page-intro p,
+    .vsla-page .metric-label {
+        color: var(--vsla-muted) !important;
+    }
+
+    .vsla-page a {
+        color: var(--vsla-brand-dark);
+    }
+
+    .vsla-page a:hover {
+        color: var(--vsla-brand);
+    }
+
+
+    /* =========================================================
+       HERO / PAGE INTRO
+       ========================================================= */
+
+    .vsla-page .page-intro,
+    .vsla-page .vsla-hero {
+        margin-bottom: 22px;
+        padding: 24px;
+        border-radius: 18px;
+        color: #fff;
+        background: linear-gradient(
+            120deg,
+            var(--vsla-brand-dark),
+            var(--vsla-brand)
+        );
+    }
+
+    .vsla-page .page-intro h2,
+    .vsla-page .page-intro p,
+    .vsla-page .page-intro span,
+    .vsla-page .page-intro a,
+    .vsla-page .vsla-hero h2,
+    .vsla-page .vsla-hero p,
+    .vsla-page .vsla-hero span,
+    .vsla-page .vsla-hero a {
+        color: #fff;
+    }
+
+    .vsla-page .page-intro p,
+    .vsla-page .vsla-hero p {
+        opacity: .92;
+    }
+
+
+    /* =========================================================
+       PANELS / CARDS
+       ========================================================= */
+
+    .vsla-page .panel,
+    .vsla-page .metric-card {
+        padding: 20px;
+        border: 1px solid var(--vsla-line);
+        border-radius: 15px;
+        background: var(--vsla-surface);
+        box-shadow: 0 5px 18px rgba(20, 33, 61, .06);
+    }
+
+
+    /* =========================================================
+       METRICS
+       ========================================================= */
+
+    .vsla-page .metric-label {
+        font-size: .78rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .vsla-page .metric-value {
+        margin-top: 7px;
+        color: var(--vsla-brand-dark);
+        font-size: 1.7rem;
+        font-weight: 800;
+        letter-spacing: -.04em;
+    }
+
+    .vsla-page .metric-icon,
+    .vsla-page .vsla-kpi-icon,
+    .vsla-page .vsla-panel-icon,
+    .vsla-page .icon-orange,
+    .vsla-page .icon-green {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--vsla-soft);
+        color: var(--vsla-brand);
+        font-size: 1.2rem;
+    }
+
+
+    /* =========================================================
+       BUTTONS
+       ========================================================= */
+
+    .vsla-page .btn-vsla,
+    .vsla-page .vsla-btn {
+        color: #fff !important;
+        background: var(--vsla-brand);
+        border-color: var(--vsla-brand);
+        font-weight: 700;
+    }
+
+    .vsla-page .btn-vsla:hover,
+    .vsla-page .btn-vsla:focus,
+    .vsla-page .vsla-btn:hover,
+    .vsla-page .vsla-btn:focus {
+        color: #fff !important;
+        background: var(--vsla-brand-dark);
+        border-color: var(--vsla-brand-dark);
+    }
+
+    .vsla-page .btn-light {
+        color: var(--vsla-brand-dark) !important;
+        background: #fff;
+        border: 1px solid rgba(255, 255, 255, .75);
+        font-weight: 700;
+    }
+
+    .vsla-page .btn-outline-secondary {
+        color: var(--vsla-brand-dark);
+        border-color: #aeb9c7;
+    }
+
+
+    /* =========================================================
+       TABLES
+       ========================================================= */
+
+    .vsla-page .table {
+        --bs-table-color: var(--vsla-ink);
+        --bs-table-hover-color: var(--vsla-brand-dark);
+
+        vertical-align: middle;
+    }
+
+    .vsla-page .table-responsive {
+        border-radius: 12px;
+    }
+
+    .vsla-page .table thead th,
+    .vsla-page .vsla-table thead th {
+        color: var(--vsla-brand-dark) !important;
+        background: #f8faf8 !important;
+        border-bottom: 2px solid #dfe9e1 !important;
+        font-size: .75rem;
+        font-weight: 800;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .vsla-page .table tbody td {
+        color: var(--vsla-ink);
+        border-bottom-color: #e8edf2;
+    }
+
+    .vsla-page .table tbody tr:hover {
+        --bs-table-hover-bg: var(--vsla-soft-hover);
+    }
+
+    .vsla-page .table td strong,
+    .vsla-page .table td a {
+        color: var(--vsla-brand-dark);
+    }
+
+    .vsla-page .table td small {
+        color: var(--vsla-muted) !important;
+    }
+
+
+    /* =========================================================
+       STATUS BADGES
+       ========================================================= */
+
+    .vsla-page .status-pill {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 30px;
+        font-size: .74rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .vsla-page .status-active,
+    .vsla-page .status-approved,
+    .vsla-page .status-disbursed,
+    .vsla-page .status-posted,
+    .vsla-page .status-closed {
+        color: #12633f !important;
+        background: #e3f7ed;
+    }
+
+    .vsla-page .status-rejected,
+    .vsla-page .status-defaulted,
+    .vsla-page .status-void {
+        color: #9d2e27 !important;
+        background: #fff0ee;
+    }
+
+    .vsla-page .status-submitted,
+    .vsla-page .status-forming,
+    .vsla-page .status-draft {
+        color: #80520b !important;
+        background: #fff1dc;
+    }
+
+
+    /* =========================================================
+       FORMS
+       ========================================================= */
+
+    .vsla-page .form-control,
+    .vsla-page .form-select {
+        padding: .65rem .8rem;
+        color: var(--vsla-ink);
+        background: #fff;
+        border: 1px solid #b9c6d3;
+        border-radius: 9px;
+    }
+
+    .vsla-page .form-control:focus,
+    .vsla-page .form-select:focus {
+        color: var(--vsla-ink);
+        border-color: var(--vsla-focus);
+        box-shadow: 0 0 0 .2rem rgba(36, 91, 72, .15);
+    }
+
+    .vsla-page .form-control::placeholder {
+        color: #718096;
+        opacity: 1;
+    }
+
+    .vsla-page label {
+        margin-bottom: 6px;
+        font-size: .86rem;
+        font-weight: 700;
+    }
+
+    .vsla-page .form-check-label {
+        color: var(--vsla-ink);
+    }
+
+
+    /* =========================================================
+       ALERTS / BADGES
+       ========================================================= */
+
+    .vsla-page .alert {
+        color: var(--vsla-brand-dark);
+        border-width: 1px;
+    }
+
+    .vsla-page .badge.text-bg-light {
+        color: var(--vsla-brand-dark) !important;
+        background: var(--vsla-soft) !important;
+        border: 1px solid #cfe0d3;
+    }
+
+
+    /* =========================================================
+       SIDEBAR
+       ========================================================= */
+
+    .vsla-sidebar {
+        padding: 12px 10px;
+    }
+
+    .vsla-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 13px 10px 20px;
+        color: #fff;
+    }
+
+    .vsla-brand-icon {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        flex-shrink: 0;
+        border-radius: 12px;
+        background: var(--vsla-brand);
+        color: #fff;
+        font-size: 1.2rem;
+    }
+
+    .vsla-brand strong {
+        color: #fff;
+    }
+
+    .vsla-brand small {
+        display: block;
+        color: #dbe3ef;
+        font-size: .62rem;
+        letter-spacing: .12em;
+    }
+
+    .vsla-nav {
+        display: grid;
+        gap: 4px;
+    }
+
+    .vsla-nav a {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 10px 12px;
+        border-radius: 9px;
+        color: #d7dfeb;
+        font-size: .9rem;
+        text-decoration: none;
+        transition:
+            background .15s ease,
+            color .15s ease;
+    }
+
+    .vsla-nav a:hover,
+    .vsla-nav a.active {
+        color: #fff;
+        background: rgba(167, 207, 67, .22);
+        font-weight: 700;
+    }
+
+    .vsla-nav-label {
+        padding: 15px 12px 5px;
+        color: #aebbd0;
+        font-size: .66rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+    }
+
+    .vsla-sidebar-foot {
+        padding: 25px 12px 10px;
+        color: #aebbd0;
+        font-size: .65rem;
+    }
+
+
+    /* =========================================================
+       VSLA-SPECIFIC ELEMENTS
+       ========================================================= */
+
+    .vsla-page .vsla-section-kicker,
+    .vsla-page .vsla-amount,
+    .vsla-page .vsla-empty-link,
+    .vsla-page .vsla-group-name,
+    .vsla-page .vsla-count,
+    .vsla-page .vsla-eyebrow {
+        color: var(--vsla-brand-dark) !important;
+    }
+
+    .vsla-page .type-shareout {
+        background: var(--vsla-soft) !important;
+        color: var(--vsla-brand) !important;
+    }
+
+    .vsla-page .vsla-quick-action-links a:hover,
+    .vsla-page .vsla-empty-link:hover,
+    .vsla-page .vsla-group-name:hover {
+        color: var(--vsla-brand) !important;
+        border-color: #a7cf43 !important;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 767.98px) {
+        .vsla-page .page-intro,
+        .vsla-page .vsla-hero {
+            padding: 18px;
+            border-radius: 14px;
+        }
+
+        .vsla-page .metric-value {
+            font-size: 1.4rem;
+        }
+
+        .vsla-page .panel,
+        .vsla-page .metric-card {
+            padding: 16px;
+        }
+
+        .vsla-page .table {
+            font-size: .82rem;
+        }
+    }
+</style>
+
+
+<div class="vsla-page">
+    {% block vsla_content %}{% endblock %}
+</div>
+
+<style id="aped-vsla-contrast-fixes">
+    .vsla-page,
+    .vsla-page p,
+    .vsla-page td,
+    .vsla-page th,
+    .vsla-page label,
+    .vsla-page .form-text,
+    .vsla-page .small {
+        color: #172b25 !important;
+    }
+    .vsla-page .text-muted,
+    .vsla-page small.text-muted,
+    .vsla-page .vsla-sidebar-foot,
+    .vsla-page .vsla-nav-label {
+        color: #53665c !important;
+    }
+    .vsla-page h1,
+    .vsla-page h2,
+    .vsla-page h3,
+    .vsla-page h4,
+    .vsla-page .section-title,
+    .vsla-page .vsla-section-heading,
+    .vsla-page .vsla-metric-label,
+    .vsla-page .vsla-metric-value,
+    .vsla-page .vsla-kpi-value {
+        color: #173e33 !important;
+    }
+    .vsla-page .panel,
+    .vsla-page .vsla-panel,
+    .vsla-page .metric-card,
+    .vsla-page .vsla-metric {
+        background: #fff !important;
+        border-color: #e3eae5 !important;
+    }
+    .vsla-page .vsla-hero,
+    .vsla-page .page-intro {
+        background: linear-gradient(120deg, #173e33, #245b48) !important;
+    }
+    .vsla-page .vsla-hero,
+    .vsla-page .vsla-hero p,
+    .vsla-page .vsla-hero span,
+    .vsla-page .vsla-hero i,
+    .vsla-page .vsla-hero h2,
+    .vsla-page .page-intro,
+    .vsla-page .page-intro p,
+    .vsla-page .page-intro span,
+    .vsla-page .page-intro i,
+    .vsla-page .page-intro h2 {
+        color: #fff !important;
+    }
+    .vsla-page .btn-vsla,
+    .vsla-page .vsla-btn {
+        color: #fff !important;
+        background: #245b48 !important;
+        border-color: #245b48 !important;
+    }
+    .vsla-page .btn-vsla:hover,
+    .vsla-page .vsla-btn:hover {
+        background: #173e33 !important;
+        border-color: #173e33 !important;
+    }
+    .vsla-page .btn-outline-light {
+        color: #245b48 !important;
+        border-color: #245b48 !important;
+        background: #fff !important;
+    }
+    .vsla-page .vsla-hero .btn-outline-light {
+        color: #fff !important;
+        border-color: rgba(255,255,255,.8) !important;
+        background: transparent !important;
+    }
+    .vsla-page .btn-light {
+        color: #173e33 !important;
+        background: #fff !important;
+    }
+    .vsla-page .vsla-metric-icon,
+    .vsla-page .metric-icon,
+    .vsla-page .vsla-kpi-icon,
+    .vsla-page .vsla-panel-icon,
+    .vsla-page .vsla-empty-icon {
+        color: #245b48 !important;
+        background: #edf5ed !important;
+    }
+    .vsla-page .form-control,
+    .vsla-page .form-select {
+        color: #172b25 !important;
+        background: #fff !important;
+        border-color: #b9cdbd !important;
+    }
+    .vsla-page .form-control::placeholder { color: #687a70 !important; opacity: 1; }
+    .vsla-page .table thead th,
+    .vsla-page .vsla-table thead th {
+        color: #173e33 !important;
+        background: #f8faf8 !important;
+        border-bottom-color: #dfe9e1 !important;
+    }
+    .vsla-page .table tbody td,
+    .vsla-page .vsla-table tbody td { color: #172b25 !important; }
+    .vsla-page a,
+    .vsla-page .table td a,
+    .vsla-page .vsla-group-name { color: #173e33 !important; }
+    .vsla-page a:hover,
+    .vsla-page .table td a:hover,
+    .vsla-page .vsla-group-name:hover { color: #245b48 !important; }
+    .vsla-page .status-active,
+    .vsla-page .status-approved,
+    .vsla-page .status-disbursed,
+    .vsla-page .status-posted,
+    .vsla-page .status-closed { color: #17633f !important; background: #e3f5e9 !important; }
+    .vsla-page .status-forming,
+    .vsla-page .status-submitted,
+    .vsla-page .status-draft { color: #6a5312 !important; background: #fff6d9 !important; }
+    .vsla-page .status-rejected,
+    .vsla-page .status-defaulted,
+    .vsla-page .status-void { color: #922f2f !important; background: #fdeaea !important; }
+</style>
+
+{% endblock %}

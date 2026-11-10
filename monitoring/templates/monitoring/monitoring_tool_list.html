@@ -1,0 +1,547 @@
+
+{% extends "base.html" %}
+
+{% block title %}Monitoring Tools | APED{% endblock %}
+{% block body_class %}aped-catalog-page{% endblock %}
+
+{% block content %}
+
+<div class="catalog-shell">
+
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+
+    <header class="catalog-header">
+
+        <div>
+            <div class="eyebrow">
+                FIELD TOOLKIT
+            </div>
+
+            <h1 class="page-title">
+                Monitoring tools
+            </h1>
+
+            <p class="text-muted mb-0 catalog-subtitle">
+                Select a structured instrument for programme monitoring,
+                beneficiary follow-up and field data collection.
+            </p>
+        </div>
+
+        <div class="catalog-header-actions">
+
+            <a href="{% url 'form_definition_list' %}"
+               class="btn btn-outline-primary">
+                <i class="bi bi-sliders me-1"></i>
+                Manage forms
+            </a>
+
+            <a href="{% url 'record_create' %}"
+               class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>
+                Start a record
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- ============================================================
+         PROGRAMME AREA FILTER
+         ============================================================ -->
+
+    <section class="filter-bar catalog-filter"
+             aria-labelledby="catalog-filter-heading">
+
+        <div class="catalog-filter-heading">
+
+            <div>
+                <span class="dashboard-section-kicker">
+                    FILTER CATALOGUE
+                </span>
+
+                <h2 id="catalog-filter-heading">
+                    Browse by programme area
+                </h2>
+
+                <p class="text-muted small mb-0">
+                    Narrow the available instruments to a specific programme area.
+                </p>
+            </div>
+
+            {% if category %}
+                <a href="{% url 'form_catalog' %}"
+                   class="catalog-clear-filter">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Clear filter
+                </a>
+            {% endif %}
+
+        </div>
+
+        <form method="get"
+              action="{% url 'form_catalog' %}"
+              class="catalog-filter-form">
+
+            <div class="row align-items-end g-3">
+
+                <div class="col-12 col-md-8 col-lg-6">
+
+                    <label for="category" class="form-label">
+                        Programme area
+                    </label>
+
+                    <select
+                        id="category"
+                        name="category"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            All programme areas
+                        </option>
+
+                        {% for value, label in categories %}
+
+                            <option value="{{ value }}"
+                                {% if category == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-12 col-md-4 col-lg-3">
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i>
+                        Apply filter
+                    </button>
+
+                </div>
+
+                <div class="col-12 col-lg-3">
+
+                    <div class="catalog-filter-note">
+                        <i class="bi bi-info-circle me-1"></i>
+
+                        {% if category %}
+                            Showing selected programme area.
+                        {% else %}
+                            Browsing all programme areas.
+                        {% endif %}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- ============================================================
+         CATALOGUE SUMMARY
+         ============================================================ -->
+
+    <div class="catalog-section-heading">
+
+        <div>
+            <span class="eyebrow">
+                AVAILABLE INSTRUMENTS
+            </span>
+
+            <h2 class="h5 mb-0">
+                Monitoring tools
+            </h2>
+        </div>
+
+        <span class="catalog-count">
+            <i class="bi bi-collection me-1"></i>
+            {{ forms|length }}
+            tool{{ forms|length|pluralize }}
+        </span>
+
+    </div>
+
+
+    <!-- ============================================================
+         MONITORING TOOL CARDS
+         ============================================================ -->
+
+    <div class="row g-3 g-xl-4">
+
+        {% for f in forms %}
+
+            <div class="col-12 col-md-6 col-xl-4">
+
+                <article class="tool-card catalog-tool-card">
+
+                    <!-- Card header -->
+                    <div class="tool-card-top">
+
+                        <span class="category-pill">
+                            {{ f.get_category_display }}
+                        </span>
+
+                        <span class="catalog-record-count">
+                            <i class="bi bi-journal-text me-1"></i>
+                            {{ f.record_count|default:0 }}
+                            record{{ f.record_count|default:0|pluralize }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Tool information -->
+                    <div class="catalog-tool-content">
+
+                        <h2>
+                            {{ f.name }}
+                        </h2>
+
+                        <p>
+                            {{ f.description|default:"Structured instrument for APED programme monitoring and field data collection." }}
+                        </p>
+
+                    </div>
+
+
+                    <!-- Tool metadata -->
+                    <div class="catalog-tool-meta">
+
+                        <span>
+                            <i class="bi bi-layers me-1"></i>
+
+                            {{ f.schema|length }}
+                            section{{ f.schema|length|pluralize }}
+                        </span>
+
+                        {% if f.updated_at %}
+                            <span>
+                                <i class="bi bi-calendar3 me-1"></i>
+                                Updated {{ f.updated_at|date:"d M Y" }}
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- Card action -->
+                    <div class="catalog-tool-actions">
+
+                        <a href="{% url 'form_records' f.pk %}"
+                           class="btn btn-outline-primary w-100">
+
+                            <i class="bi bi-folder2-open me-1"></i>
+                            Open records
+
+                            <i class="bi bi-arrow-right ms-auto"></i>
+
+                        </a>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        {% empty %}
+
+            <!-- Empty catalogue -->
+            <div class="col-12">
+
+                <section class="panel catalog-empty-panel">
+
+                    <div class="empty-state">
+
+                        <div class="empty-icon">
+                            <i class="bi bi-clipboard-x"></i>
+                        </div>
+
+                        <h3>No monitoring tools found</h3>
+
+                        <p>
+                            {% if category %}
+                                No active instruments are available for this
+                                programme area. Try another area or clear
+                                the current filter.
+                            {% else %}
+                                No monitoring instruments have been configured
+                                yet. Create a form definition to begin building
+                                your monitoring toolkit.
+                            {% endif %}
+                        </p>
+
+                        <div class="d-flex justify-content-center flex-wrap gap-2">
+
+                            <a href="{% url 'form_definition_list' %}"
+                               class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i>
+                                Manage forms
+                            </a>
+
+                            {% if category %}
+                                <a href="{% url 'form_catalog' %}"
+                                   class="btn btn-outline-primary">
+                                    View all tools
+                                </a>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+<style>
+
+/* ==========================================================================
+   APED MONITORING TOOLS CATALOGUE
+   ========================================================================== */
+
+.catalog-shell {
+    width: 100%;
+}
+
+.catalog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.catalog-subtitle {
+    max-width: 650px;
+    line-height: 1.7;
+}
+
+.catalog-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.catalog-header-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.catalog-filter {
+    margin-bottom: 28px;
+}
+
+.catalog-filter-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.catalog-filter-heading h2 {
+    margin: 5px 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.catalog-filter-note {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.catalog-clear-filter {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.catalog-section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.catalog-section-heading h2 {
+    margin-top: 5px;
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.catalog-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border: 1px solid var(--border-soft);
+    border-radius: 30px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.catalog-tool-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 260px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.catalog-tool-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--forest2);
+    box-shadow: 0 8px 24px rgb(28 69 52 / 8%);
+}
+
+.catalog-tool-card .tool-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.catalog-record-count {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.catalog-tool-content {
+    flex: 1;
+}
+
+.catalog-tool-content h2 {
+    margin-bottom: 9px;
+    color: var(--text-main);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.catalog-tool-content p {
+    margin-bottom: 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.catalog-tool-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 12px 0;
+    margin-top: auto;
+    border-top: 1px solid var(--border-soft);
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.catalog-tool-meta span {
+    display: inline-flex;
+    align-items: center;
+}
+
+.catalog-tool-actions {
+    padding-top: 12px;
+}
+
+.catalog-tool-actions .btn {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.catalog-empty-panel {
+    padding: 20px;
+}
+
+.catalog-empty-panel .empty-state {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+@media (max-width: 991.98px) {
+    .catalog-header {
+        flex-direction: column;
+    }
+
+    .catalog-header-actions {
+        width: 100%;
+    }
+
+    .catalog-header-actions .btn {
+        flex: 1 1 auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .catalog-header-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .catalog-filter-heading {
+        flex-direction: column;
+    }
+
+    .catalog-section-heading {
+        align-items: flex-start;
+    }
+
+    .catalog-tool-card {
+        padding: 17px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .catalog-tool-card {
+        transition: none;
+    }
+
+    .catalog-tool-card:hover {
+        transform: none;
+    }
+}
+
+</style>
+{% endblock %}

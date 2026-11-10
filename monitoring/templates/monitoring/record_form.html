@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }} · APED{% endblock %}
+{% block content %}
+<div class="form-hero mb-4"><a href="{% url 'record_list' %}" class="small text-decoration-none">← Back to records</a><div class="eyebrow mt-3">FIELD DATA COLLECTION</div><h1 class="page-title">{{ page_title }}</h1><p class="text-muted mb-0">Use the workbook structure below. Complete only the sections relevant to this visit.</p></div>
+<form method="post" class="record-form" id="monitoring-form">
+{% csrf_token %}
+{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+<section class="panel mb-4"><div class="panel-heading"><div><h2>Record setup</h2><p>Core fields used for search, reporting and follow-up</p></div><span class="step-number">01</span></div><div class="row g-3 p-3">
+{% for field in form %}<div class="col-md-6 col-xl-4"><label class="form-label">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}
+</div></section>
+{% if schema %}{% for section in schema %}
+<section class="panel mb-3 schema-section {% if section.repeatable %}repeatable-section{% endif %}" data-section-key="{{ section.key }}"><div class="panel-heading"><div><h2>{{ section.title }}</h2><p>{% if section.repeatable %}Add one row for each participant, animal, hive, member or transaction.{% else %}Capture the workbook fields for this section.{% endif %}</p></div><span class="step-number">{{ forloop.counter|add:1|stringformat:'02d' }}</span></div>
+{% if section.repeatable %}<div class="repeatable-body">{% for row in section.rows %}<div class="repeatable-row" data-row-index="{{ forloop.counter0 }}"><div class="row-number">{{ forloop.counter }}</div><div class="row g-3 flex-grow-1">{% for field in row.fields %}<div class="col-md-6 col-xl-4"><label class="form-label">{{ field.label }}</label>{% include 'monitoring/partials/schema_field.html' with field=field input_name=field.input_name %}</div>{% endfor %}</div><button type="button" class="row-remove" aria-label="Remove row">×</button></div>{% endfor %}</div><div class="repeatable-footer"><button type="button" class="btn btn-sm btn-outline-primary add-row">+ Add row</button><span class="small text-muted">Rows are optional. Leave blank when not applicable.</span></div>
+{% else %}<div class="row g-3 p-3">{% for field in section.fields %}<div class="col-md-6 col-xl-4"><label class="form-label">{{ field.label }}</label>{% include 'monitoring/partials/schema_field.html' with field=field input_name=field.input_name %}</div>{% endfor %}</div>{% endif %}</section>
+{% endfor %}{% else %}<div class="alert alert-info">Choose a monitoring tool to load its workbook sections.</div>{% endif %}
+<div class="form-actions"><a class="btn btn-light" href="{% url 'record_list' %}">Cancel</a><button class="btn btn-primary btn-lg">Save monitoring record</button></div>
+</form>{% endblock %}
+{% block scripts %}<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const selector = document.getElementById('id_form');
+  if (selector) selector.addEventListener('change', function () { const url = new URL(window.location.href); if (this.value) url.searchParams.set('form', this.value); else url.searchParams.delete('form'); window.location.href = url.toString(); });
+  document.querySelectorAll('.repeatable-section').forEach(function (section) {
+    const body = section.querySelector('.repeatable-body');
+    section.querySelector('.add-row').addEventListener('click', function () { const source = body.querySelector('.repeatable-row'); const clone = source.cloneNode(true); const index = body.querySelectorAll('.repeatable-row').length; clone.dataset.rowIndex = index; clone.querySelector('.row-number').textContent = index + 1; clone.querySelectorAll('input, textarea, select').forEach(function (field) { field.value = ''; field.name = field.name.replace(/__row_\d+__/, '__row_' + index + '__'); }); body.appendChild(clone); });
+    body.addEventListener('click', function (event) { if (!event.target.classList.contains('row-remove')) return; const rows = body.querySelectorAll('.repeatable-row'); if (rows.length === 1) rows[0].querySelectorAll('input, textarea, select').forEach(field => field.value = ''); else event.target.closest('.repeatable-row').remove(); });
+  });
+});
+</script>{% endblock %}

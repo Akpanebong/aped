@@ -1,0 +1,658 @@
+
+{% extends "base.html" %}
+
+{% block title %}Monitoring Records | APED{% endblock %}
+{% block body_class %}aped-record-list-page{% endblock %}
+
+{% block content %}
+
+<div class="records-shell">
+
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+
+    <header class="records-header">
+
+        <div>
+            <div class="eyebrow">FIELD EVIDENCE</div>
+
+            <h1 class="page-title">
+                Monitoring records
+            </h1>
+
+            <p class="text-muted mb-0">
+                Search field visits, review submissions and export
+                programme monitoring reports.
+            </p>
+        </div>
+
+        <div class="records-header-actions">
+
+            <a class="btn btn-outline-primary"
+               href="{% url 'export_excel' %}?{{ request.GET.urlencode }}">
+                <i class="bi bi-file-earmark-excel me-1"></i>
+                Export Excel
+            </a>
+
+            <a class="btn btn-outline-primary"
+               href="{% url 'export_pdf' %}?{{ request.GET.urlencode }}">
+                <i class="bi bi-file-earmark-pdf me-1"></i>
+                Export PDF
+            </a>
+
+            <a class="btn btn-primary"
+               href="{% url 'record_create' %}">
+                <i class="bi bi-plus-lg me-1"></i>
+                New record
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- ============================================================
+         FILTER PANEL
+         ============================================================ -->
+
+    <section class="filter-bar records-filter mb-4"
+             aria-labelledby="records-filter-heading">
+
+        <div class="records-filter-heading">
+
+            <div>
+                <span class="dashboard-section-kicker">
+                    RECORD MANAGEMENT
+                </span>
+
+                <h2 id="records-filter-heading">
+                    Search and filter records
+                </h2>
+
+                <p class="text-muted small mb-0">
+                    Narrow the register using the available search criteria.
+                </p>
+            </div>
+
+            <a href="{% url 'record_list' %}"
+               class="records-clear-link">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>
+                Clear filters
+            </a>
+
+        </div>
+
+
+        <form method="get"
+              action="{% url 'record_list' %}">
+
+            <div class="row g-3">
+
+                <!-- Search -->
+                <div class="col-12 col-lg-4">
+
+                    <label for="record-search" class="form-label">
+                        Search records
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+
+                        <input
+                            id="record-search"
+                            type="search"
+                            name="q"
+                            class="form-control"
+                            value="{{ filters.q|default:'' }}"
+                            placeholder="Reference, location, group..."
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- Monitoring tool -->
+                <div class="col-12 col-md-6 col-lg-3">
+
+                    <label for="record-form" class="form-label">
+                        Monitoring tool
+                    </label>
+
+                    <select id="record-form"
+                            name="form"
+                            class="form-select">
+
+                        <option value="">All tools</option>
+
+                        {% for f in forms %}
+
+                            <option value="{{ f.pk }}"
+                                {% if filters.form == f.pk|stringformat:"s" %}
+                                    selected
+                                {% endif %}>
+                                {{ f.name }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- Status -->
+                <div class="col-12 col-md-6 col-lg-2">
+
+                    <label for="record-status" class="form-label">
+                        Status
+                    </label>
+
+                    <select id="record-status"
+                            name="status"
+                            class="form-select">
+
+                        <option value="">All statuses</option>
+
+                        <option value="draft"
+                            {% if filters.status == "draft" %}selected{% endif %}>
+                            Draft
+                        </option>
+
+                        <option value="submitted"
+                            {% if filters.status == "submitted" %}selected{% endif %}>
+                            Submitted
+                        </option>
+
+                        <option value="reviewed"
+                            {% if filters.status == "reviewed" %}selected{% endif %}>
+                            Reviewed
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Start date -->
+                <div class="col-12 col-md-6 col-lg-3">
+
+                    <label for="record-start" class="form-label">
+                        From date
+                    </label>
+
+                    <input
+                        id="record-start"
+                        type="date"
+                        name="start"
+                        class="form-control"
+                        value="{{ filters.start|default:'' }}"
+                    >
+
+                </div>
+
+
+                <!-- End date -->
+                <div class="col-12 col-md-6 col-lg-3">
+
+                    <label for="record-end" class="form-label">
+                        To date
+                    </label>
+
+                    <input
+                        id="record-end"
+                        type="date"
+                        name="end"
+                        class="form-control"
+                        value="{{ filters.end|default:'' }}"
+                    >
+
+                </div>
+
+
+                <!-- District -->
+                <div class="col-12 col-md-6 col-lg-3">
+
+                    <label for="record-district" class="form-label">
+                        District
+                    </label>
+
+                    <input
+                        id="record-district"
+                        type="text"
+                        name="district"
+                        class="form-control"
+                        value="{{ filters.district|default:'' }}"
+                        placeholder="Enter district"
+                    >
+
+                </div>
+
+
+                <!-- Filter actions -->
+                <div class="col-12 col-md-6 col-lg-3 d-flex align-items-end">
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i>
+                        Apply filters
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- ============================================================
+         REGISTER SUMMARY
+         ============================================================ -->
+
+    <div class="records-summary">
+
+        <div>
+            <span class="eyebrow">
+                FIELD EVIDENCE REGISTER
+            </span>
+
+            <h2 class="h5 mb-0">
+                All monitoring records
+            </h2>
+        </div>
+
+        <div class="records-summary-count">
+            <i class="bi bi-journal-check me-1"></i>
+            {{ records|length }}
+            record{{ records|length|pluralize }} shown
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================
+         RECORDS TABLE
+         ============================================================ -->
+
+    <section class="panel records-panel">
+
+        {% if records %}
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle records-table mb-0">
+
+                    <thead>
+                        <tr>
+                            <th scope="col">Reference</th>
+                            <th scope="col">Monitoring tool</th>
+                            <th scope="col">Visit date</th>
+                            <th scope="col">Location</th>
+                            <th scope="col">Group / beneficiary</th>
+                            <th scope="col">Officer</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">
+                                <span class="visually-hidden">Actions</span>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for r in records %}
+
+                            <tr>
+
+                                <!-- Reference -->
+                                <td>
+                                    <a class="record-reference"
+                                       href="{% url 'record_detail' r.pk %}">
+                                        {{ r.reference }}
+                                    </a>
+                                </td>
+
+
+                                <!-- Monitoring instrument -->
+                                <td>
+                                    <span class="record-tool-name">
+                                        {{ r.form.name }}
+                                    </span>
+                                </td>
+
+
+                                <!-- Visit date -->
+                                <td>
+                                    {% if r.visit_date %}
+                                        <time datetime="{{ r.visit_date|date:'Y-m-d' }}">
+                                            {{ r.visit_date|date:"d M Y" }}
+                                        </time>
+                                    {% else %}
+                                        <span class="text-muted">Not specified</span>
+                                    {% endif %}
+                                </td>
+
+
+                                <!-- Location and district -->
+                                <td>
+                                    <div class="record-location">
+                                        <i class="bi bi-geo-alt me-1"></i>
+                                        {{ r.location|default:"—" }}
+                                    </div>
+
+                                    {% if r.district %}
+                                        <div class="record-district">
+                                            {{ r.district }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+
+
+                                <!-- Group or beneficiary -->
+                                <td>
+                                    {{ r.group_or_beneficiary|default:"—" }}
+                                </td>
+
+
+                                <!-- Field officer -->
+                                <td>
+                                    {{ r.created_by|default:"—" }}
+                                </td>
+
+
+                                <!-- Status -->
+                                <td>
+                                    <span class="status status-{{ r.status }}">
+                                        {{ r.get_status_display }}
+                                    </span>
+                                </td>
+
+
+                                <!-- Action -->
+                                <td>
+                                    <a href="{% url 'record_detail' r.pk %}"
+                                       class="record-open-link"
+                                       aria-label="Open record {{ r.reference }}">
+
+                                        Open
+                                        <i class="bi bi-arrow-up-right ms-1"></i>
+
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="records-table-footer">
+                Showing {{ records|length }} record{{ records|length|pluralize }}
+            </div>
+
+        {% else %}
+
+            <!-- Empty register -->
+            <div class="empty-state records-empty-state">
+
+                <div class="empty-icon">
+                    <i class="bi bi-journal-x"></i>
+                </div>
+
+                <h3>No monitoring records found</h3>
+
+                <p>
+                    No records match the current search criteria.
+                    Try broadening your filters or create a new field record.
+                </p>
+
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+
+                    <a href="{% url 'record_create' %}"
+                       class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>
+                        Create new record
+                    </a>
+
+                    <a href="{% url 'record_list' %}"
+                       class="btn btn-outline-primary">
+                        Clear filters
+                    </a>
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+<style>
+
+/* ==========================================================================
+   APED MONITORING RECORDS REGISTER
+   ========================================================================== */
+
+.records-shell {
+    width: 100%;
+}
+
+.records-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.records-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 9px;
+}
+
+.records-header-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.records-filter {
+    margin-bottom: 24px;
+}
+
+.records-filter-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.records-filter-heading h2 {
+    margin: 5px 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.records-clear-link {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.records-filter .form-control,
+.records-filter .form-select {
+    min-height: 42px;
+}
+
+.records-filter .input-group-text {
+    background: var(--surface-soft);
+    border-color: var(--border-soft);
+    color: var(--text-muted);
+}
+
+.records-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 15px;
+}
+
+.records-summary h2 {
+    margin-top: 5px;
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.records-summary-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border: 1px solid var(--border-soft);
+    border-radius: 30px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.records-panel {
+    overflow: hidden;
+}
+
+.records-table {
+    min-width: 1050px;
+    font-size: 13px;
+}
+
+.records-table thead th {
+    padding: 14px 13px;
+    background: var(--surface-soft);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.records-table tbody td {
+    padding: 14px 13px;
+    border-color: var(--border-soft);
+}
+
+.records-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.record-reference {
+    color: var(--forest);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.record-reference:hover,
+.record-open-link:hover {
+    text-decoration: underline;
+}
+
+.record-tool-name {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.record-location {
+    color: var(--text-main);
+    white-space: nowrap;
+}
+
+.record-district {
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.record-open-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--forest2);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.records-table-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-soft);
+    background: var(--surface-soft);
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.records-empty-state {
+    padding: 55px 20px;
+}
+
+.records-empty-state p {
+    max-width: 450px;
+    margin: 8px auto 20px;
+}
+
+@media (max-width: 991.98px) {
+    .records-header {
+        flex-direction: column;
+    }
+
+    .records-header-actions {
+        width: 100%;
+    }
+
+    .records-header-actions .btn {
+        flex: 1 1 auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .records-header-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .records-filter-heading {
+        flex-direction: column;
+    }
+
+    .records-summary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .records-empty-state {
+        padding: 35px 15px;
+    }
+}
+</style>
+
+{% endblock %}

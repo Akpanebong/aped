@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}{{ section.title }} · APED{% endblock %}
+{% block content %}
+<div class="form-hero mb-4"><a href="{% url 'record_detail' record.pk %}" class="small text-decoration-none">← Back to {{ record.group_or_beneficiary|default:record.reference }}</a><div class="eyebrow mt-3">SECTION {{ section_index }} OF {{ section_count }}</div><h1 class="page-title">{{ section.title }}</h1><p class="text-muted mb-0">Capture the information for this section of {{ record.form.name }}.</p></div>
+<form method="post" class="record-form">{% csrf_token %}
+  <section class="panel mb-3 schema-section {% if section.repeatable %}repeatable-section{% endif %}">
+    {% if section.repeatable %}<div class="repeatable-body">{% for row in section.rows %}<div class="repeatable-row"><div class="row-number">{{ forloop.counter }}</div><div class="row g-3 flex-grow-1">{% for field in row.fields %}<div class="col-md-6 col-xl-4"><label class="form-label">{{ field.label }}</label>{% include 'monitoring/partials/schema_field.html' with field=field input_name=field.input_name %}</div>{% endfor %}</div></div>{% endfor %}</div><div class="repeatable-footer"><span class="small text-muted">Add or complete one row for each applicable participant, animal, hive, member or transaction.</span></div>
+    {% else %}<div class="row g-3 p-3">{% for field in section.fields %}<div class="col-md-6 col-xl-4"><label class="form-label">{{ field.label }}</label>{% include 'monitoring/partials/schema_field.html' with field=field input_name=field.input_name %}</div>{% endfor %}</div>{% endif %}
+  </section>
+  <div class="form-actions"><a class="btn btn-light" href="{% url 'record_detail' record.pk %}">Cancel</a><button class="btn btn-primary btn-lg">Save section</button></div>
+</form>
+{% endblock %}

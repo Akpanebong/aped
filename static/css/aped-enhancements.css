@@ -1,0 +1,332 @@
+
+/* ==========================================================================
+   APED MONITORING SYSTEM
+   STRUCTURED FORMS & REPEATABLE FIELD ENHANCEMENTS
+   Dependencies: aped.css
+   ========================================================================== */
+
+
+/* 1. FORM LAYOUT
+   ========================================================================== */
+
+.form-hero {
+    width: 100%;
+    max-width: 980px;
+    margin-inline: auto;
+}
+
+.form-narrow .panel {
+    border-radius: var(--radius-lg);
+}
+
+.form-narrow .panel > .panel-heading {
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.form-narrow .form-text {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.form-narrow .text-danger.small {
+    line-height: 1.45;
+}
+
+
+/* 2. STRUCTURED FORM SECTIONS
+   ========================================================================== */
+
+.schema-section {
+    min-width: 0;
+}
+
+.schema-section .panel-heading {
+    background: linear-gradient(90deg, #fbfdfb, #fff);
+}
+
+.schema-section .panel-heading h2 {
+    color: var(--forest);
+}
+
+.schema-section .form-control,
+.schema-section .form-select {
+    background-color: #fff;
+}
+
+.schema-section .form-label {
+    display: block;
+    min-height: 30px;
+    line-height: 1.4;
+}
+
+
+/* 3. ATTENDANCE REGISTER
+   ========================================================================== */
+
+.attendance-table {
+    min-width: 1000px;
+}
+
+.attendance-table th,
+.attendance-table td {
+    vertical-align: middle;
+}
+
+.attendance-table td {
+    white-space: normal;
+}
+
+.attendance-table td:first-child {
+    min-width: 130px;
+    color: var(--forest);
+    font-weight: 700;
+}
+
+.attendance-table td:nth-child(5) {
+    white-space: nowrap;
+}
+
+.attendance-table .btn-sm {
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+
+/* 4. REPEATABLE FIELD GROUPS
+   ========================================================================== */
+
+.repeatable-group {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: #fff;
+}
+
+.repeatable-body {
+    padding: 12px 18px 4px;
+    background: #fbfdfb;
+}
+
+.repeatable-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+    padding: 16px 0;
+    border-bottom: 1px solid #e8efea;
+}
+
+.repeatable-row:last-child {
+    border-bottom: 0;
+}
+
+.repeatable-row .row {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+
+/* 5. REPEATABLE ROW NUMBERING
+   ========================================================================== */
+
+.row-number {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    margin-top: 28px;
+    border-radius: 9px;
+    background: #e8f2e9;
+    color: var(--forest2);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+/* 6. REMOVE-ROW CONTROL
+   ========================================================================== */
+
+.row-remove {
+    display: inline-grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    margin-top: 27px;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #9a5c5c;
+    font-size: 21px;
+    line-height: 1;
+    cursor: pointer;
+    transition: color .15s ease, background-color .15s ease;
+}
+
+.row-remove:hover {
+    background: #fbeeee;
+    color: #b33131;
+}
+
+.row-remove:focus-visible {
+    outline: 2px solid #b33131;
+    outline-offset: 3px;
+}
+
+
+/* 7. ADD-ROW FOOTER AND ACTIONS
+   ========================================================================== */
+
+.repeatable-footer {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 18px 16px;
+    border-top: 1px solid #edf1ee;
+    background: #fff;
+}
+
+.repeatable-footer .btn {
+    flex-shrink: 0;
+}
+
+
+/* 8. STRUCTURED DATA AND SAVED RESULTS
+   ========================================================================== */
+
+.structured-row {
+    min-width: 0;
+    padding: 4px 0 12px;
+}
+
+.repeatable-result {
+    padding: 14px 0;
+    border-top: 1px dashed #dfe9e1;
+}
+
+.repeatable-result:first-of-type {
+    border-top: 0;
+}
+
+
+/* 9. BUTTON CONSISTENCY
+   ========================================================================== */
+
+.btn-outline-primary {
+    background-color: #fff;
+}
+
+
+/* 10. TABLET AND MOBILE
+   ========================================================================== */
+
+@media (max-width: 767.98px) {
+
+    .form-narrow .form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .form-narrow .form-actions .btn {
+        width: 100%;
+    }
+
+    .repeatable-body {
+        padding: 8px 12px;
+    }
+
+    .repeatable-row {
+        gap: 8px;
+        padding: 12px 0;
+    }
+
+    .row-number {
+        width: 26px;
+        height: 26px;
+        flex-basis: 26px;
+        margin-top: 29px;
+        font-size: 10px;
+    }
+
+    .row-remove {
+        margin-top: 27px;
+    }
+
+    .repeatable-footer {
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .repeatable-footer .btn {
+        max-width: 100%;
+    }
+
+    .schema-section .panel-heading {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .schema-section .form-label {
+        min-height: 0;
+    }
+
+    .attendance-table {
+        min-width: 950px;
+    }
+}
+
+
+/* 11. VERY NARROW PHONES
+   ========================================================================== */
+
+@media (max-width: 420px) {
+
+    .repeatable-row {
+        gap: 5px;
+    }
+
+    .repeatable-body {
+        padding-inline: 8px;
+    }
+
+    .row-number {
+        width: 23px;
+        height: 23px;
+        flex-basis: 23px;
+        border-radius: 7px;
+        font-size: 9px;
+    }
+
+    .row-remove {
+        width: 27px;
+        height: 30px;
+        flex-basis: 27px;
+        font-size: 18px;
+    }
+
+    .repeatable-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .repeatable-footer .btn {
+        width: 100%;
+    }
+}
+
+
+/* 12. ACCESSIBILITY
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .row-remove {
+        transition: none;
+    }
+}

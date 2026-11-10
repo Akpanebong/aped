@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }} · APED{% endblock %}
+{% block content %}
+<div class="form-hero mb-4"><a href="{% url 'attendance_list' %}" class="small text-decoration-none">← Attendance register</a><div class="eyebrow mt-3">FIELD ATTENDANCE</div><h1 class="page-title">{{ page_title }}</h1><p class="text-muted mb-0">Capture the activity details and add multiple participants in one submission.</p></div>
+<form method="post" class="panel p-3 p-md-4">{% csrf_token %}
+{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+<div class="panel-heading px-0 pt-0 mb-3"><div><h2>Activity details</h2><p>Location, date and linked programme activity.</p></div></div>
+<div class="row g-3">{% for field in form %}<div class="col-md-6"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>{{ field }}{% for error in field.errors %}<div class="small text-danger">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
+<div class="d-flex justify-content-between align-items-center mt-4 mb-2"><div><h2 class="h5 mb-1">Participants</h2><p class="small text-muted mb-0">Add up to 25 participants. Initials may be entered as the signature.</p></div><button type="button" class="btn btn-outline-primary" id="add-participant">+ Add participant</button></div>
+{{ formset.management_form }}<div class="table-responsive"><table class="table align-middle" id="participants-table"><thead><tr><th>Name</th><th>Sex</th><th>Title / role</th><th>Contact</th><th>Signature</th><th>Remove</th></tr></thead><tbody>{% for participant in formset %}<tr class="participant-row">{% for hidden in participant.hidden_fields %}{{ hidden }}{% endfor %}<td>{{ participant.name }}{{ participant.name.errors }}</td><td>{{ participant.sex }}{{ participant.sex.errors }}</td><td>{{ participant.title_role }}{{ participant.title_role.errors }}</td><td>{{ participant.contact }}{{ participant.contact.errors }}</td><td>{{ participant.signature }}{{ participant.signature.errors }}</td><td>{% if participant.DELETE %}{{ participant.DELETE }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+<div class="form-actions mt-4"><a href="{% url 'attendance_list' %}" class="btn btn-light">Cancel</a><button class="btn btn-primary">Save attendance sheet</button></div></form>
+{% endblock %}
+{% block scripts %}<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const total = document.getElementById('id_participants-TOTAL_FORMS');
+  const table = document.querySelector('#participants-table tbody');
+  const add = document.getElementById('add-participant');
+  if (!total || !table || !add) return;
+  function initials(name) {
+    return name.trim().split(/\s+/).filter(Boolean).slice(0, 3).map(function (word) { return word.charAt(0); }).join('').toUpperCase();
+  }
+  function updateInitials(row) {
+    const name = row.querySelector('input[name$="-name"]');
+    const signature = row.querySelector('input[name$="-signature"]');
+    if (name && signature) signature.value = initials(name.value);
+  }
+  table.querySelectorAll('.participant-row').forEach(updateInitials);
+  table.addEventListener('input', function (event) {
+    if (event.target.name && event.target.name.endsWith('-name')) updateInitials(event.target.closest('.participant-row'));
+  });
+  add.addEventListener('click', function () {
+    const index = Number(total.value);
+    if (index >= 25) return;
+    const row = table.querySelector('.participant-row').cloneNode(true);
+    row.innerHTML = row.innerHTML.replace(/participants-\d+/g, 'participants-' + index);
+    row.querySelectorAll('input, select').forEach(function (input) { if (input.type !== 'hidden' && input.type !== 'checkbox') input.value = ''; });
+    table.appendChild(row);
+    updateInitials(row);
+    total.value = index + 1;
+    if (index + 1 >= 25) add.disabled = true;
+  });
+});
+</script>{% endblock %}

@@ -1,0 +1,742 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} · APED{% endblock %}
+{% block body_class %}aped-form-builder-page{% endblock %}
+
+{% block content %}
+<div class="form-builder-shell">
+
+    <!-- Page header -->
+    <header class="form-builder-header">
+        <div class="form-builder-heading">
+            <a href="{% url 'form_definition_list' %}" class="form-builder-back-link">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                Monitoring forms
+            </a>
+
+            <div class="form-builder-eyebrow">
+                <i class="bi bi-sliders" aria-hidden="true"></i>
+                Form configuration
+            </div>
+
+            <h1 class="form-builder-title">{{ page_title }}</h1>
+
+            <p class="form-builder-description">
+                Configure the questions and sections field teams will use
+                when completing this monitoring tool.
+            </p>
+        </div>
+
+        <div class="form-builder-header-actions">
+            <span class="form-builder-mode">
+                <i class="bi bi-ui-checks-grid" aria-hidden="true"></i>
+                Form designer
+            </span>
+        </div>
+    </header>
+
+    <form method="post" id="definition-form">
+        {% csrf_token %}
+
+        <!-- General form errors -->
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger form-builder-errors" role="alert">
+                <div class="d-flex gap-2">
+                    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                    <div>
+                        <strong>Please correct the following errors:</strong>
+                        {{ form.non_field_errors }}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Form details -->
+        <section class="form-builder-panel mb-4">
+            <div class="form-builder-panel-heading">
+                <div class="form-builder-step">01</div>
+                <div>
+                    <h2>Form details</h2>
+                    <p>
+                        Define the identity and purpose of this monitoring instrument.
+                    </p>
+                </div>
+            </div>
+
+            <div class="row g-3">
+
+                {% for field in form %}
+                    {% if field.name != "schema" and field.name != "description" and field.name != "is_active" %}
+                        <div class="col-lg-6">
+                            <label
+                                class="form-label"
+                                for="{{ field.id_for_label }}"
+                            >
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">
+                                    {{ field.help_text }}
+                                </div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="form-builder-field-error">
+                                    <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Description -->
+                <div class="col-12">
+                    <label
+                        for="{{ form.description.id_for_label }}"
+                        class="form-label"
+                    >
+                        {{ form.description.label|default:"Description" }}
+                        {% if form.description.field.required %}
+                            <span class="text-danger">*</span>
+                        {% endif %}
+                    </label>
+
+                    {{ form.description }}
+
+                    {% if form.description.help_text %}
+                        <div class="form-text">
+                            {{ form.description.help_text }}
+                        </div>
+                    {% endif %}
+
+                    {% for error in form.description.errors %}
+                        <div class="form-builder-field-error">
+                            <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Active status -->
+                <div class="col-12">
+                    <div class="form-builder-active-option">
+                        <div class="form-check">
+                            {{ form.is_active }}
+
+                            <label
+                                class="form-check-label"
+                                for="{{ form.is_active.id_for_label }}"
+                            >
+                                <strong>{{ form.is_active.label|default:"Active monitoring form" }}</strong>
+                                <span>
+                                    Make this form available to authorised users
+                                    when creating monitoring records.
+                                </span>
+                            </label>
+                        </div>
+
+                        {% for error in form.is_active.errors %}
+                            <div class="form-builder-field-error">
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Question builder -->
+        <section class="form-builder-panel form-builder-question-panel mb-4">
+
+            <div class="form-builder-panel-heading form-builder-question-heading">
+                <div class="form-builder-step">02</div>
+
+                <div class="flex-grow-1">
+                    <h2>Form questions</h2>
+                    <p>
+                        Organise questions into sections and configure the
+                        information field teams should collect.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-outline-primary form-builder-add-button"
+                    id="add-section"
+                >
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                    Add section
+                </button>
+            </div>
+
+            <!-- Builder guidance -->
+            <div class="form-builder-guidance">
+                <div class="form-builder-guidance-icon">
+                    <i class="bi bi-lightbulb" aria-hidden="true"></i>
+                </div>
+
+                <div>
+                    <strong>How the form builder works</strong>
+                    <p>
+                        Each section groups related questions. Use a
+                        <strong>repeatable section</strong> when users need to
+                        enter multiple rows, such as participants, animals,
+                        beehives or transactions.
+                    </p>
+                </div>
+            </div>
+
+            <!-- JavaScript-rendered sections -->
+            <div id="schema-builder" class="schema-builder"></div>
+
+            <!-- Empty builder state -->
+            <div id="schema-empty" class="form-builder-empty">
+                <div class="form-builder-empty-icon">
+                    <i class="bi bi-ui-checks" aria-hidden="true"></i>
+                </div>
+
+                <h3>No sections added yet</h3>
+
+                <p>
+                    Start by adding a section. You can then add questions
+                    and configure their response types.
+                </p>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="add-first-section"
+                >
+                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                    Add the first section
+                </button>
+            </div>
+
+            <!-- JSON schema field: required by the form builder JS -->
+            {{ form.schema.as_hidden }}
+
+            {% for error in form.schema.errors %}
+                <div class="form-builder-field-error mt-2">
+                    <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                    {{ error }}
+                </div>
+            {% endfor %}
+
+        </section>
+
+        <div class="d-flex justify-content-end mb-4">
+            <button type="button" class="btn btn-outline-primary" id="add-section-bottom">
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                Add section
+            </button>
+        </div>
+
+        <!-- Form actions -->
+        <footer class="form-builder-actions">
+            <div class="form-builder-actions-note">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                Review your sections and questions before saving.
+            </div>
+
+            <div class="form-builder-action-buttons">
+
+                <a
+                    href="{% url 'form_definition_list' %}"
+                    class="btn btn-light border"
+                >
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+                    Save monitoring form
+                </button>
+            </div>
+        </footer>
+
+    </form>
+</div>
+<style>
+
+/* =========================================================
+   APED MONITORING FORM BUILDER
+   Form configuration and dynamic question designer
+   ========================================================= */
+
+.aped-form-builder-page {
+    --builder-border: var(--border, #e5ebe7);
+    --builder-muted: var(--text-muted, #718078);
+    --builder-heading: var(--heading-color, #20382e);
+    --builder-forest: var(--forest, #173e33);
+}
+
+.form-builder-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Page header */
+
+.form-builder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding-bottom: 1.35rem;
+    border-bottom: 1px solid var(--builder-border);
+}
+
+.form-builder-heading {
+    max-width: 760px;
+    min-width: 0;
+}
+
+.form-builder-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--builder-muted);
+    font-size: .83rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color .2s ease;
+}
+
+.form-builder-back-link:hover {
+    color: var(--builder-forest);
+}
+
+.form-builder-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin: 1.1rem 0 .45rem;
+    color: var(--builder-forest);
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+.form-builder-title {
+    margin: 0;
+    color: var(--builder-heading);
+    font-size: clamp(1.65rem, 3vw, 2.2rem);
+    font-weight: 750;
+    line-height: 1.2;
+    letter-spacing: -.035em;
+    overflow-wrap: anywhere;
+}
+
+.form-builder-description {
+    max-width: 650px;
+    margin: .65rem 0 0;
+    color: var(--builder-muted);
+    font-size: .91rem;
+    line-height: 1.65;
+}
+
+.form-builder-mode {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .5rem .8rem;
+    color: var(--builder-forest);
+    background: #edf5f0;
+    border: 1px solid #dcebe1;
+    border-radius: 30px;
+    font-size: .76rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Panels */
+
+.form-builder-panel {
+    padding: 1.5rem;
+    background: var(--surface, #fff);
+    border: 1px solid var(--builder-border);
+    border-radius: var(--card-radius, 14px);
+    box-shadow: var(--shadow-card, 0 3px 14px rgb(24 49 38 / 4%));
+}
+
+.form-builder-panel-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: .9rem;
+    margin-bottom: 1.4rem;
+}
+
+.form-builder-step {
+    display: grid;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    color: var(--builder-forest);
+    background: #edf5f0;
+    border-radius: 10px;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.form-builder-panel-heading h2 {
+    margin: 0;
+    color: var(--builder-heading);
+    font-size: 1.05rem;
+    font-weight: 750;
+}
+
+.form-builder-panel-heading p {
+    margin: .35rem 0 0;
+    color: var(--builder-muted);
+    font-size: .83rem;
+    line-height: 1.55;
+}
+
+/* Form controls */
+
+.aped-form-builder-page .form-label {
+    margin-bottom: .45rem;
+    color: #43534a;
+    font-size: .82rem;
+    font-weight: 650;
+}
+
+.aped-form-builder-page input:not([type="checkbox"]):not([type="radio"]),
+.aped-form-builder-page select,
+.aped-form-builder-page textarea {
+    width: 100%;
+    border: 1px solid var(--builder-border);
+    border-radius: 8px;
+    font-size: .86rem;
+    box-shadow: none;
+}
+
+.aped-form-builder-page input:not([type="checkbox"]):not([type="radio"]),
+.aped-form-builder-page select {
+    min-height: 43px;
+    padding: .55rem .75rem;
+}
+
+.aped-form-builder-page textarea {
+    min-height: 105px;
+    padding: .7rem .8rem;
+    resize: vertical;
+}
+
+.aped-form-builder-page input:focus,
+.aped-form-builder-page select:focus,
+.aped-form-builder-page textarea:focus {
+    border-color: var(--builder-forest);
+    outline: 0;
+    box-shadow: 0 0 0 .2rem rgb(23 62 51 / 9%);
+}
+
+.aped-form-builder-page .form-text {
+    margin-top: .4rem;
+    color: var(--builder-muted);
+    font-size: .75rem;
+    line-height: 1.5;
+}
+
+.form-builder-field-error {
+    display: flex;
+    align-items: flex-start;
+    gap: .35rem;
+    margin-top: .4rem;
+    color: #b42318;
+    font-size: .76rem;
+    line-height: 1.45;
+}
+
+.form-builder-errors {
+    border-radius: 10px;
+    font-size: .85rem;
+}
+
+.form-builder-errors ul {
+    margin: .45rem 0 0;
+    padding-left: 1.2rem;
+}
+
+/* Active option */
+
+.form-builder-active-option {
+    padding: .9rem 1rem;
+    background: #f8faf9;
+    border: 1px solid var(--builder-border);
+    border-radius: 9px;
+}
+
+.form-builder-active-option .form-check {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
+    margin: 0;
+    padding-left: 0;
+}
+
+.form-builder-active-option .form-check-input {
+    float: none;
+    flex: 0 0 1rem;
+    margin: .2rem 0 0;
+}
+
+.form-builder-active-option .form-check-label {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    color: var(--builder-heading);
+    font-size: .83rem;
+}
+
+.form-builder-active-option .form-check-label span {
+    color: var(--builder-muted);
+    font-size: .76rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* Question builder */
+
+.form-builder-question-heading {
+    align-items: center;
+}
+
+.form-builder-add-button {
+    flex-shrink: 0;
+    min-height: 40px;
+    font-size: .82rem;
+    font-weight: 650;
+}
+
+.form-builder-guidance {
+    display: flex;
+    align-items: flex-start;
+    gap: .8rem;
+    margin-bottom: 1.35rem;
+    padding: 1rem;
+    background: #f6f9f7;
+    border: 1px solid #e6eee8;
+    border-radius: 9px;
+}
+
+.form-builder-guidance-icon {
+    display: grid;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    color: var(--builder-forest);
+    background: #e6f0e9;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.form-builder-guidance strong {
+    display: block;
+    margin-bottom: .25rem;
+    color: var(--builder-heading);
+    font-size: .81rem;
+}
+
+.form-builder-guidance p {
+    margin: 0;
+    color: var(--builder-muted);
+    font-size: .78rem;
+    line-height: 1.6;
+}
+
+/* Empty builder state */
+
+.form-builder-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+    border: 1px dashed #d6e1d9;
+    border-radius: 11px;
+    text-align: center;
+}
+
+.form-builder-empty-icon {
+    display: grid;
+    width: 54px;
+    height: 54px;
+    margin-bottom: .9rem;
+    place-items: center;
+    color: var(--builder-forest);
+    background: #edf5f0;
+    border-radius: 15px;
+    font-size: 1.35rem;
+}
+
+.form-builder-empty h3 {
+    margin: 0;
+    color: var(--builder-heading);
+    font-size: .98rem;
+    font-weight: 750;
+}
+
+.form-builder-empty p {
+    max-width: 420px;
+    margin: .5rem 0 1rem;
+    color: var(--builder-muted);
+    font-size: .82rem;
+    line-height: 1.6;
+}
+
+/* Schema builder: generic compatibility styles.
+   These apply to common containers generated by the JS builder. */
+
+.schema-builder:empty {
+    display: none;
+}
+
+.schema-builder .card,
+.schema-builder .schema-section,
+.schema-builder .builder-section {
+    margin-bottom: 1rem;
+    border: 1px solid var(--builder-border);
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.schema-builder .card-header,
+.schema-builder .section-header {
+    padding: .9rem 1rem;
+    background: #f8faf9;
+    border-bottom: 1px solid var(--builder-border);
+}
+
+.schema-builder .card-body,
+.schema-builder .section-body {
+    padding: 1rem;
+}
+
+.schema-builder .form-control,
+.schema-builder .form-select {
+    min-height: 40px;
+    border-color: var(--builder-border);
+    border-radius: 7px;
+    font-size: .83rem;
+    box-shadow: none;
+}
+
+.schema-builder .form-control:focus,
+.schema-builder .form-select:focus {
+    border-color: var(--builder-forest);
+    box-shadow: 0 0 0 .18rem rgb(23 62 51 / 8%);
+}
+
+/* Form actions */
+
+.form-builder-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem 0 1.5rem;
+    border-top: 1px solid var(--builder-border);
+}
+
+.form-builder-actions-note {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--builder-muted);
+    font-size: .78rem;
+}
+
+.form-builder-actions-note i {
+    color: var(--builder-forest);
+}
+
+.form-builder-action-buttons {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+}
+
+.form-builder-action-buttons .btn {
+    min-height: 43px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .84rem;
+    font-weight: 650;
+}
+
+/* Responsive */
+
+@media (max-width: 767.98px) {
+    .form-builder-shell {
+        gap: 1.1rem;
+    }
+
+    .form-builder-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .form-builder-panel {
+        padding: 1rem;
+    }
+
+    .form-builder-question-heading {
+        flex-wrap: wrap;
+    }
+
+    .form-builder-add-button {
+        width: 100%;
+    }
+
+    .form-builder-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .form-builder-actions-note {
+        align-items: flex-start;
+    }
+
+    .form-builder-action-buttons {
+        width: 100%;
+    }
+
+    .form-builder-action-buttons .btn {
+        flex: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .form-builder-back-link {
+        transition: none;
+    }
+}
+
+</style>
+{% endblock %}
+
+{% block scripts %}
+    {{ schema_data|json_script:"schema-data" }}
+    <script
+        src="{% static 'js/monitoring-form-builder.js' %}"
+        defer
+    ></script>
+{% endblock %}

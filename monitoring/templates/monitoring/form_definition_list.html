@@ -1,0 +1,446 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage monitoring forms · APED{% endblock %}
+
+{% block content %}
+<div class="form-management-shell">
+
+    <!-- Page header -->
+    <div class="form-management-header">
+        <div>
+            <div class="eyebrow">FORM CONFIGURATION</div>
+            <h1 class="page-title">Monitoring forms</h1>
+            <p class="text-muted mb-0">
+                Create, configure and maintain the structured tools used for field monitoring and data collection.
+            </p>
+        </div>
+
+        <div class="form-management-header-actions">
+            <a href="{% url 'form_catalog' %}" class="btn btn-light border">
+                <i class="bi bi-grid me-1"></i> View toolkit
+            </a>
+            <a href="{% url 'form_definition_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> New monitoring form
+            </a>
+        </div>
+    </div>
+
+    <!-- Overview -->
+    <div class="form-management-overview">
+        <div class="form-overview-card">
+            <div class="form-overview-icon">
+                <i class="bi bi-ui-checks-grid"></i>
+            </div>
+            <div>
+                <span class="form-overview-label">Total forms</span>
+                <strong>{{ forms|length }}</strong>
+                <small>Configured monitoring tools</small>
+            </div>
+        </div>
+
+        <div class="form-overview-card">
+            <div class="form-overview-icon">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div>
+                <span class="form-overview-label">Active forms</span>
+                <strong>{{ active_count|default:"—" }}</strong>
+                <small>Available for field data collection</small>
+            </div>
+        </div>
+
+        <div class="form-overview-card">
+            <div class="form-overview-icon">
+                <i class="bi bi-clipboard-data"></i>
+            </div>
+            <div>
+                <span class="form-overview-label">Monitoring records</span>
+                <strong>{{ total_records|default:"—" }}</strong>
+                <small>Records captured using these tools</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form register -->
+    <section class="panel form-management-panel">
+
+        <div class="form-management-panel-header">
+            <div>
+                <h2>Configured monitoring tools</h2>
+                <p>Manage the questions, sections and availability of each tool.</p>
+            </div>
+            <span class="form-management-count">
+                {{ forms|length }} form{{ forms|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle form-management-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Monitoring form</th>
+                        <th>Category</th>
+                        <th>Sections</th>
+                        <th>Records</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in forms %}
+                    <tr>
+                        <td>
+                            <div class="form-name-cell">
+                                <div class="form-name-icon">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ item.name }}</strong>
+                                    <small>{{ item.slug|default:"No reference assigned" }}</small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="form-category">
+                                {{ item.get_category_display }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="form-table-number">
+                                {{ item.schema|length }}
+                            </span>
+                            <small class="text-muted">sections</small>
+                        </td>
+
+                        <td>
+                            <span class="form-table-number">
+                                {{ item.record_count|default:0 }}
+                            </span>
+                            <small class="text-muted">records</small>
+                        </td>
+
+                        <td>
+                            {% if item.is_active %}
+                                <span class="status status-submitted">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="status status-inactive">
+                                    <i class="bi bi-pause-circle me-1"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end text-nowrap">
+                            <a href="{% url 'form_definition_update' item.pk %}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-sliders me-1"></i> Manage
+                            </a>
+
+                            <a href="{% url 'form_definition_delete' item.pk %}"
+                               class="btn btn-sm btn-outline-danger ms-1">
+                                <i class="bi bi-trash me-1"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="form-management-empty">
+                                <div class="form-empty-icon">
+                                    <i class="bi bi-ui-checks"></i>
+                                </div>
+                                <h3>No monitoring forms yet</h3>
+                                <p>
+                                    Create your first monitoring form to define the questions
+                                    and sections used during field data collection.
+                                </p>
+                                <a href="{% url 'form_definition_create' %}"
+                                   class="btn btn-primary">
+                                    <i class="bi bi-plus-lg me-1"></i> Create monitoring form
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-management-footer">
+            <span>
+                <i class="bi bi-info-circle me-1"></i>
+                Changes to monitoring tools should not alter the interpretation of historical records.
+            </span>
+        </div>
+
+    </section>
+</div>
+<style>
+/* =========================================
+   APED — MONITORING FORM MANAGEMENT
+========================================= */
+
+.form-management-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+}
+
+.form-management-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+}
+
+.form-management-overview {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.form-overview-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.2rem;
+    background: #fff;
+    border: 1px solid #e7ece9;
+    border-radius: 14px;
+}
+
+.form-overview-icon,
+.form-name-icon,
+.form-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #eaf5ef;
+    color: #198a52;
+}
+
+.form-overview-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    font-size: 1.25rem;
+}
+
+.form-overview-card > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+
+.form-overview-label {
+    color: #68756e;
+    font-size: .78rem;
+    font-weight: 600;
+}
+
+.form-overview-card strong {
+    color: #183b2b;
+    font-size: 1.55rem;
+    line-height: 1.2;
+}
+
+.form-overview-card small {
+    color: #849087;
+    font-size: .75rem;
+}
+
+.form-management-panel {
+    overflow: hidden;
+}
+
+.form-management-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.4rem;
+    border-bottom: 1px solid #edf0ee;
+}
+
+.form-management-panel-header h2 {
+    margin: 0 0 .25rem;
+    color: #183b2b;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.form-management-panel-header p {
+    margin: 0;
+    color: #78847d;
+    font-size: .83rem;
+}
+
+.form-management-count {
+    padding: .35rem .7rem;
+    background: #f0f5f2;
+    color: #35664b;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.form-management-table {
+    min-width: 850px;
+}
+
+.form-management-table thead th {
+    padding: .9rem 1rem;
+    background: #f8faf9;
+    color: #64736a;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e9eeeb;
+    white-space: nowrap;
+}
+
+.form-management-table tbody td {
+    padding: 1rem;
+    border-color: #edf1ee;
+    font-size: .85rem;
+}
+
+.form-management-table tbody tr:hover {
+    background: #fbfdfb;
+}
+
+.form-name-cell {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-width: 200px;
+}
+
+.form-name-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    font-size: 1.05rem;
+}
+
+.form-name-cell > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.form-name-cell strong {
+    color: #263c30;
+    font-weight: 650;
+}
+
+.form-name-cell small {
+    color: #89948d;
+    font-size: .72rem;
+}
+
+.form-category {
+    display: inline-block;
+    padding: .35rem .65rem;
+    background: #f1f5f2;
+    color: #52675a;
+    border-radius: 6px;
+    font-size: .77rem;
+    font-weight: 600;
+}
+
+.form-table-number {
+    color: #263c30;
+    font-size: .95rem;
+    font-weight: 700;
+    margin-right: .2rem;
+}
+
+.status-inactive {
+    background: #f1f2f3;
+    color: #69737b;
+}
+
+.form-management-empty {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.form-empty-icon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 1rem;
+    border-radius: 16px;
+    font-size: 1.6rem;
+}
+
+.form-management-empty h3 {
+    color: #263c30;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.form-management-empty p {
+    margin-bottom: 1.25rem;
+    color: #78847d;
+    font-size: .85rem;
+    line-height: 1.65;
+}
+
+.form-management-footer {
+    padding: .85rem 1.4rem;
+    background: #fafcfb;
+    border-top: 1px solid #edf1ee;
+    color: #78847d;
+    font-size: .76rem;
+}
+
+@media (max-width: 768px) {
+    .form-management-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .form-management-header-actions {
+        width: 100%;
+    }
+
+    .form-management-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .form-management-panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-management-header-actions .btn {
+        flex: 1;
+    }
+
+    .form-management-footer {
+        padding: .85rem 1rem;
+        line-height: 1.6;
+    }
+}
+
+</style>
+{% endblock %}

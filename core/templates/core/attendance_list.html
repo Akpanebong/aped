@@ -1,0 +1,718 @@
+
+{% extends "base.html" %}
+
+{% block title %}Attendance Register · APED{% endblock %}
+{% block body_class %}aped-attendance-page{% endblock %}
+
+{% block content %}
+<div class="attendance-shell">
+
+    <!-- Page header -->
+    <header class="attendance-header">
+        <div class="attendance-header-content">
+            <div class="attendance-eyebrow">
+                <i class="bi bi-people" aria-hidden="true"></i>
+                Field attendance
+            </div>
+
+            <h1 class="attendance-title">Attendance register</h1>
+
+            <p class="attendance-description">
+                Manage activity attendance sheets, monitor participation
+                and access individual participant records.
+            </p>
+        </div>
+
+        <div class="attendance-header-actions">
+            <a href="{% url 'attendance_export_excel' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-outline-primary">
+                <i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>
+                Export Excel
+            </a>
+
+            <a href="{% url 'attendance_export_pdf' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-outline-primary">
+                <i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>
+                Export PDF
+            </a>
+
+            <a href="{% url 'activity_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>
+                Activities
+            </a>
+
+            <a href="{% url 'attendance_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                Add attendance sheet
+            </a>
+        </div>
+    </header>
+
+    <!-- Attendance overview -->
+    <section class="attendance-overview">
+        <div class="attendance-overview-card">
+            <div class="attendance-overview-icon">
+                <i class="bi bi-clipboard2-check" aria-hidden="true"></i>
+            </div>
+
+            <div>
+                <span class="attendance-overview-label">Attendance sheets</span>
+                <strong class="attendance-overview-value">
+                    {{ sheets|length }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="attendance-overview-note">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            Each attendance sheet represents an activity and contains
+            its participant records.
+        </div>
+    </section>
+
+    <form method="get" class="panel p-3 p-lg-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div><h2 class="h5 mb-1">Filter attendance</h2><p class="text-muted small mb-0">Exports use these filters. Leave them blank to export all records.</p></div>
+            <a href="{% url 'attendance_list' %}" class="btn btn-sm btn-outline-secondary">Clear filters</a>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6 col-xl-3"><label class="form-label" for="attendance-activity">Activity</label><select id="attendance-activity" name="activity" class="form-select"><option value="">All activities</option>{% for item in activities %}<option value="{{ item.pk }}" {% if filters.activity == item.pk|stringformat:'s' %}selected{% endif %}>{{ item.activity_name }}</option>{% endfor %}</select></div>
+            <div class="col-md-6 col-xl-2"><label class="form-label" for="attendance-date-from">From date</label><input id="attendance-date-from" type="date" name="date_from" class="form-control" value="{{ filters.date_from }}"></div>
+            <div class="col-md-6 col-xl-2"><label class="form-label" for="attendance-date-to">To date</label><input id="attendance-date-to" type="date" name="date_to" class="form-control" value="{{ filters.date_to }}"></div>
+            <div class="col-md-6 col-xl-2"><label class="form-label" for="attendance-district">District</label><input id="attendance-district" name="district" class="form-control" value="{{ filters.district }}"></div>
+            <div class="col-md-6 col-xl-2"><label class="form-label" for="attendance-status">Status</label><select id="attendance-status" name="status" class="form-select"><option value="">All statuses</option>{% for value, label in status_choices %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <div class="col-md-6 col-xl-3"><label class="form-label" for="attendance-participant">Participant</label><input id="attendance-participant" name="participant" class="form-control" value="{{ filters.participant }}" placeholder="Search participant"></div>
+            <div class="col-md-6 col-xl-2 d-flex align-items-end"><button class="btn btn-primary w-100">Apply filters</button></div>
+        </div>
+    </form>
+
+    <!-- Attendance register -->
+    <section class="attendance-register-panel">
+
+        <div class="attendance-register-heading">
+            <div>
+                <h2>Attendance sheets</h2>
+                <p>Review activity attendance and manage submitted registers.</p>
+            </div>
+
+            <span class="attendance-count">
+                {{ sheets|length }}
+                sheet{{ sheets|length|pluralize }}
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table attendance-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Activity / Project</th>
+                        <th scope="col">Activity date</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Participants</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for sheet in sheets %}
+                        <tr>
+                            <!-- Activity -->
+                            <td>
+                                <div class="attendance-activity-cell">
+                                    <a
+                                        href="{% url 'attendance_detail' sheet.pk %}"
+                                        class="attendance-activity-name"
+                                    >
+                                        {{ sheet.activity|default:"Field activity" }}
+                                    </a>
+
+                                    {% if sheet.activity and sheet.activity.project %}
+                                        <span class="attendance-project-name">
+                                            <i class="bi bi-folder2-open me-1" aria-hidden="true"></i>
+                                            {{ sheet.activity.project.name }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <!-- Date -->
+                            <td>
+                                <span class="attendance-date">
+                                    <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
+                                    {{ sheet.activity_date|date:"d M Y"|default:"—" }}
+                                </span>
+                            </td>
+
+                            <!-- Location -->
+                            <td>
+                                <div class="attendance-location">
+                                    <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                    <span>
+                                        {{ sheet.village|default:sheet.parish|default:sheet.sub_county|default:sheet.district|default:"Not specified" }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- Participants -->
+                            <td>
+                                <span class="attendance-participant-count">
+                                    <i class="bi bi-people me-1" aria-hidden="true"></i>
+                                    {{ sheet.participants.count }}
+                                </span>
+                            </td>
+
+                            <!-- Status -->
+                            <td>
+                                <span class="status status-{{ sheet.status }}">
+                                    {{ sheet.get_status_display }}
+                                </span>
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-end">
+                                <div class="attendance-row-actions">
+
+                                    <a
+                                        href="{% url 'attendance_detail' sheet.pk %}"
+                                        class="attendance-action-link"
+                                        aria-label="View attendance sheet"
+                                        title="View attendance sheet"
+                                    >
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                        <span>View</span>
+                                    </a>
+
+                                    <a
+                                        href="{% url 'attendance_update' sheet.pk %}"
+                                        class="attendance-action-link"
+                                        aria-label="Edit attendance sheet"
+                                        title="Edit attendance sheet"
+                                    >
+                                        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+                                        <span>Edit</span>
+                                    </a>
+
+                                    <form
+                                        class="attendance-delete-form"
+                                        method="post"
+                                        action="{% url 'attendance_delete' sheet.pk %}"
+                                        onsubmit="return confirm('Delete this attendance sheet and its participants? This action cannot be undone.');"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            type="submit"
+                                            class="attendance-action-link attendance-delete-button"
+                                            aria-label="Delete attendance sheet"
+                                            title="Delete attendance sheet"
+                                        >
+                                            <i class="bi bi-trash3" aria-hidden="true"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="attendance-empty-state">
+                                    <div class="attendance-empty-icon">
+                                        <i class="bi bi-clipboard2-x" aria-hidden="true"></i>
+                                    </div>
+
+                                    <h3>No attendance sheets yet</h3>
+
+                                    <p>
+                                        Create an attendance sheet for a field
+                                        activity and add multiple participants
+                                        to establish your attendance register.
+                                    </p>
+                                    <a
+                                        href="{% url 'attendance_create' %}"
+                                        class="btn btn-outline-primary">
+                                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                                        Create attendance sheet
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if sheets %}
+            <div class="attendance-register-footer">
+                <span>
+                    <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                    Attendance records are organised by field activity.
+                </span>
+            </div>
+        {% endif %}
+
+    </section>
+</div>
+<style>
+
+/* =========================================================
+   APED ATTENDANCE REGISTER
+   ========================================================= */
+
+.aped-attendance-page {
+    --attendance-border: var(--border, #e5ebe7);
+    --attendance-muted: var(--text-muted, #718078);
+    --attendance-heading: var(--heading-color, #20382e);
+    --attendance-forest: var(--forest, #173e33);
+}
+
+.attendance-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+/* Header */
+
+.attendance-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding-bottom: 1.35rem;
+    border-bottom: 1px solid var(--attendance-border);
+}
+
+.attendance-header-content {
+    max-width: 700px;
+}
+
+.attendance-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin-bottom: .5rem;
+    color: var(--attendance-forest);
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+.attendance-title {
+    margin: 0;
+    color: var(--attendance-heading);
+    font-size: clamp(1.65rem, 3vw, 2.2rem);
+    font-weight: 750;
+    letter-spacing: -.035em;
+}
+
+.attendance-description {
+    margin: .6rem 0 0;
+    color: var(--attendance-muted);
+    font-size: .9rem;
+    line-height: 1.65;
+}
+
+.attendance-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+}
+
+.attendance-header-actions .btn {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .82rem;
+    font-weight: 650;
+}
+
+/* Overview */
+
+.attendance-overview {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.attendance-overview-card {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    min-width: 200px;
+    padding: .9rem 1.1rem;
+    background: var(--surface, #fff);
+    border: 1px solid var(--attendance-border);
+    border-radius: 11px;
+}
+
+.attendance-overview-icon {
+    display: grid;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    color: var(--attendance-forest);
+    background: #edf5f0;
+    border-radius: 10px;
+    font-size: 1.15rem;
+}
+
+.attendance-overview-card > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+
+.attendance-overview-label {
+    color: var(--attendance-muted);
+    font-size: .73rem;
+    font-weight: 600;
+}
+
+.attendance-overview-value {
+    color: var(--attendance-heading);
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.attendance-overview-note {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--attendance-muted);
+    font-size: .78rem;
+    line-height: 1.5;
+}
+
+/* Register panel */
+
+.attendance-register-panel {
+    overflow: hidden;
+    background: var(--surface, #fff);
+    border: 1px solid var(--attendance-border);
+    border-radius: var(--card-radius, 14px);
+    box-shadow: var(--shadow-card, 0 3px 14px rgb(24 49 38 / 4%));
+}
+
+.attendance-register-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.25rem 1.35rem;
+    border-bottom: 1px solid var(--attendance-border);
+}
+
+.attendance-register-heading h2 {
+    margin: 0;
+    color: var(--attendance-heading);
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+.attendance-register-heading p {
+    margin: .3rem 0 0;
+    color: var(--attendance-muted);
+    font-size: .81rem;
+}
+
+.attendance-count {
+    padding: .4rem .7rem;
+    color: var(--attendance-forest);
+    background: #edf5f0;
+    border-radius: 30px;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Table */
+
+.attendance-table {
+    min-width: 900px;
+}
+
+.attendance-table thead th {
+    padding: .85rem 1.1rem;
+    color: #69776f;
+    background: #f8faf9;
+    border-bottom: 1px solid var(--attendance-border);
+    font-size: .7rem;
+    font-weight: 750;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.attendance-table tbody td {
+    padding: 1rem 1.1rem;
+    color: #43534a;
+    border-color: #edf1ee;
+    font-size: .83rem;
+    vertical-align: middle;
+}
+
+.attendance-table tbody tr {
+    transition: background .15s ease;
+}
+
+.attendance-table tbody tr:hover {
+    background: #fafcfb;
+}
+
+/* Activity */
+
+.attendance-activity-cell {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    min-width: 180px;
+}
+
+.attendance-activity-name {
+    color: var(--attendance-forest);
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+}
+
+.attendance-activity-name:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.attendance-project-name {
+    color: var(--attendance-muted);
+    font-size: .74rem;
+}
+
+/* Date and location */
+
+.attendance-date {
+    color: #536158;
+    font-size: .8rem;
+    white-space: nowrap;
+}
+
+.attendance-date i,
+.attendance-location i {
+    color: #819087;
+}
+
+.attendance-location {
+    display: flex;
+    align-items: flex-start;
+    gap: .4rem;
+    min-width: 120px;
+    color: #43534a;
+    line-height: 1.5;
+}
+
+/* Participants */
+
+.attendance-participant-count {
+    display: inline-flex;
+    align-items: center;
+    gap: .2rem;
+    padding: .3rem .55rem;
+    color: var(--attendance-forest);
+    background: #edf5f0;
+    border-radius: 6px;
+    font-size: .77rem;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+/* Status */
+
+.aped-attendance-page .status {
+    display: inline-flex;
+    align-items: center;
+    padding: .32rem .65rem;
+    border-radius: 30px;
+    font-size: .7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.aped-attendance-page .status-draft {
+    color: #805b16;
+    background: #fff6df;
+}
+
+.aped-attendance-page .status-submitted {
+    color: #245d91;
+    background: #eaf3fc;
+}
+
+.aped-attendance-page .status-reviewed {
+    color: #24734c;
+    background: #e8f5ed;
+}
+
+/* Row actions */
+
+.attendance-row-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .8rem;
+}
+
+.attendance-action-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: 0;
+    color: var(--attendance-forest);
+    background: none;
+    border: 0;
+    font: inherit;
+    font-size: .77rem;
+    font-weight: 650;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.attendance-action-link:hover {
+    color: #24734c;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.attendance-delete-button {
+    color: #b42318;
+}
+
+.attendance-delete-button:hover {
+    color: #8e1c14;
+}
+
+.attendance-delete-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+/* Empty state */
+
+.attendance-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+}
+
+.attendance-empty-icon {
+    display: grid;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 1rem;
+    place-items: center;
+    color: var(--attendance-forest);
+    background: #edf5f0;
+    border-radius: 16px;
+    font-size: 1.45rem;
+}
+
+.attendance-empty-state h3 {
+    margin: 0;
+    color: var(--attendance-heading);
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+.attendance-empty-state p {
+    max-width: 430px;
+    margin: .55rem 0 1.1rem;
+    color: var(--attendance-muted);
+    font-size: .84rem;
+    line-height: 1.65;
+}
+
+.attendance-empty-state .btn {
+    font-size: .82rem;
+    font-weight: 650;
+}
+
+/* Footer */
+
+.attendance-register-footer {
+    padding: .8rem 1.25rem;
+    color: var(--attendance-muted);
+    background: #fafcfb;
+    border-top: 1px solid var(--attendance-border);
+    font-size: .75rem;
+}
+
+/* Responsive */
+
+@media (max-width: 767.98px) {
+    .attendance-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .attendance-header-actions {
+        width: 100%;
+    }
+
+    .attendance-header-actions .btn {
+        flex: 1;
+    }
+
+    .attendance-overview {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .attendance-overview-card {
+        width: 100%;
+    }
+
+    .attendance-register-heading {
+        padding: 1rem;
+    }
+
+    .attendance-table thead th,
+    .attendance-table tbody td {
+        padding: .8rem;
+    }
+
+    .attendance-row-actions {
+        gap: .65rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .attendance-header-actions {
+        flex-direction: column;
+    }
+
+    .attendance-header-actions .btn {
+        width: 100%;
+    }
+
+    .attendance-action-link span {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .attendance-table tbody tr {
+        transition: none;
+    }
+}
+
+</style>
+{% endblock %}

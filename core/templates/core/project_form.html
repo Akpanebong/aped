@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} · APED{% endblock %}
+
+{% block content %}
+<div class="project-form-shell">
+
+    <!-- Page header -->
+    <div class="project-form-header">
+        <a href="{% url 'project_list' %}" class="project-form-back">
+            <i class="bi bi-arrow-left me-1"></i> Back to projects
+        </a>
+
+        <div class="eyebrow mt-3">PROGRAMME SETUP</div>
+
+        <h1 class="page-title">{{ page_title }}</h1>
+
+        <p class="text-muted mb-0">
+            Provide the project information used to organise activities,
+            attendance and monitoring records.
+        </p>
+    </div>
+
+    <!-- Project form -->
+    <section class="panel project-form-panel">
+
+        <div class="project-form-panel-heading">
+            <div class="project-form-icon">
+                <i class="bi bi-folder-plus"></i>
+            </div>
+
+            <div>
+                <h2>Project information</h2>
+                <p>Complete the project details below.</p>
+            </div>
+
+            <span class="project-required-note">
+                <span class="text-danger">*</span> Required fields
+            </span>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger mx-4 mt-3">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="project-form-body">
+
+                {% for hidden in form.hidden_fields %}
+                    {{ hidden }}
+                {% endfor %}
+
+                <div class="project-form-grid">
+
+                    {% for field in form.visible_fields %}
+                        <div class="project-form-field
+                            {% if field.name == 'description' %}project-description-field{% endif %}">
+
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">
+                                    {{ field.help_text }}
+                                </div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="small text-danger mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <div class="project-form-actions">
+                <a href="{% url 'project_list' %}" class="btn btn-light border">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>
+                    Save project
+                </button>
+            </div>
+
+        </form>
+    </section>
+
+    <div class="project-form-note">
+        <i class="bi bi-info-circle me-1"></i>
+        Project information helps maintain consistent programme reporting
+        across activities, attendance and monitoring records.
+    </div>
+
+</div>
+<style>
+/* =========================================
+   APED — PROJECT FORM
+========================================= */
+
+.project-form-shell {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.project-form-header {
+    margin-bottom: 1.5rem;
+}
+
+.project-form-back {
+    display: inline-flex;
+    align-items: center;
+    color: #52675a;
+    font-size: .85rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.project-form-back:hover {
+    color: #198a52;
+}
+
+.project-form-panel {
+    overflow: hidden;
+}
+
+.project-form-panel-heading {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.3rem 1.5rem;
+    border-bottom: 1px solid #edf0ee;
+}
+
+.project-form-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    background: #eaf5ef;
+    color: #198a52;
+    border-radius: 12px;
+    font-size: 1.3rem;
+}
+
+.project-form-panel-heading h2 {
+    margin: 0 0 .25rem;
+    color: #183b2b;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.project-form-panel-heading p {
+    margin: 0;
+    color: #78847d;
+    font-size: .82rem;
+}
+
+.project-required-note {
+    margin-left: auto;
+    color: #78847d;
+    font-size: .75rem;
+    white-space: nowrap;
+}
+
+.project-form-body {
+    padding: 1.5rem;
+}
+
+.project-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 1.4rem;
+}
+
+.project-form-field {
+    min-width: 0;
+}
+
+.project-description-field {
+    grid-column: 1 / -1;
+}
+
+.project-form-field .form-label {
+    display: block;
+    margin-bottom: .45rem;
+    color: #35483c;
+    font-size: .83rem;
+    font-weight: 650;
+}
+
+.project-form-field .form-control,
+.project-form-field .form-select {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid #dce5df;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #263c30;
+    font-size: .88rem;
+    box-shadow: none;
+}
+
+.project-form-field textarea.form-control {
+    min-height: 125px;
+    resize: vertical;
+}
+
+.project-form-field .form-control:focus,
+.project-form-field .form-select:focus {
+    border-color: #198a52;
+    box-shadow: 0 0 0 3px rgb(25 138 82 / 10%);
+}
+
+.project-form-field .form-text {
+    margin-top: .4rem;
+    color: #849087;
+    font-size: .75rem;
+}
+
+.project-form-field .is-invalid {
+    border-color: #dc3545;
+}
+
+.project-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .7rem;
+    padding: 1.1rem 1.5rem;
+    background: #fafcfb;
+    border-top: 1px solid #edf0ee;
+}
+
+.project-form-note {
+    margin-top: 1rem;
+    color: #78847d;
+    font-size: .78rem;
+    line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+    .project-form-panel-heading {
+        flex-wrap: wrap;
+        padding: 1rem;
+    }
+
+    .project-required-note {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .project-form-body {
+        padding: 1rem;
+    }
+
+    .project-form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .project-description-field {
+        grid-column: 1;
+    }
+
+    .project-form-actions {
+        padding: 1rem;
+    }
+
+    .project-form-actions .btn {
+        flex: 1;
+    }
+}
+</style>
+{% endblock %}

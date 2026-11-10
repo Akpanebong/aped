@@ -1,0 +1,220 @@
+{% extends 'vsla/base.html' %}
+
+{% block vsla_content %}
+
+<div class="page-intro mb-4">
+    <div class="small fw-bold text-uppercase opacity-75">
+        {{ eyebrow|default:"VSLA MANAGEMENT" }}
+    </div>
+
+    <h2 class="h3 fw-bold mt-2 mb-1">
+        {{ title }}
+    </h2>
+
+    <p class="text-muted mb-0">
+        Complete the details below. Fields marked with
+        <span class="text-danger fw-bold">*</span> are required.
+    </p>
+</div>
+
+
+<div class="panel">
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                <div class="fw-semibold mb-1">
+                    Please correct the following errors:
+                </div>
+
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+
+        <div class="row g-3">
+
+            {% for field in form %}
+
+                <div class="
+                    {% if field.name in 'notes purpose agenda minutes' %}
+                        col-12
+                    {% elif field.field.widget.input_type == 'checkbox' %}
+                        col-12 col-md-6 col-xl-4
+                    {% else %}
+                        col-12 col-md-6
+                    {% endif %}
+                ">
+
+                    {% if field.field.widget.input_type == 'checkbox' %}
+
+                        <div class="form-check border rounded-3 p-3 h-100
+                                    {% if field.errors %}border-danger{% endif %}">
+
+                            {{ field }}
+
+                            <label
+                                class="form-check-label fw-medium"
+                                for="{{ field.id_for_label }}"
+                            >
+                                {{ field.label }}
+
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {% if field.help_text %}
+                                <div class="form-text mt-2">
+                                    {{ field.help_text }}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                    {% else %}
+
+                        <label
+                            class="form-label fw-medium"
+                            for="{{ field.id_for_label }}"
+                        >
+                            {{ field.label }}
+
+                            {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                            {% endif %}
+                        </label>
+
+                        {{ field }}
+
+                        {% if field.help_text %}
+                            <div class="form-text">
+                                {{ field.help_text }}
+                            </div>
+                        {% endif %}
+
+                    {% endif %}
+
+
+                    {% for error in field.errors %}
+                        <div
+                            class="small text-danger mt-1"
+                            role="alert"
+                        >
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div class="d-flex flex-column flex-sm-row
+                    justify-content-end gap-2 mt-4 pt-3 border-top">
+
+            <a
+                class="btn btn-light"
+                href="{% url cancel_url %}"
+            >
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+                Cancel
+            </a>
+
+            <button
+                class="btn btn-vsla px-4"
+                type="submit"
+            >
+                <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+                Save record
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+    {{ block.super }}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            'use strict';
+
+            const group = document.getElementById('id_group');
+            const member = document.getElementById('id_member');
+
+            // These controls are only present on forms that use them.
+            if (!group || !member) {
+                return;
+            }
+
+            /**
+             * Filter member options using the selected group's ID.
+             *
+             * Each member option must have a data-group-id attribute,
+             * for example:
+             * <option value="12" data-group-id="3">Member name</option>
+             */
+            function syncMembers() {
+                const groupId = group.value;
+                const selectedOption = member.options[member.selectedIndex];
+
+                Array.from(member.options).forEach(function (option) {
+                    if (!option.value) {
+                        return;
+                    }
+
+                    const memberGroupId = option.dataset.groupId;
+                    const matches = !groupId || memberGroupId === groupId;
+
+                    option.hidden = !matches;
+                    option.disabled = !matches;
+                });
+
+                // Clear a selection that does not belong to the chosen group.
+                if (
+                    selectedOption &&
+                    selectedOption.value &&
+                    selectedOption.disabled
+                ) {
+                    member.value = '';
+                }
+            }
+
+            /**
+             * Selecting a member automatically selects their group.
+             */
+            member.addEventListener('change', function () {
+                const selected = member.options[member.selectedIndex];
+
+                if (!selected || !selected.value) {
+                    return;
+                }
+
+                const memberGroupId = selected.dataset.groupId;
+
+                if (memberGroupId) {
+                    group.value = memberGroupId;
+                    syncMembers();
+
+                    // Restore the member after the options are synchronized.
+                    member.value = selected.value;
+                }
+            });
+
+            group.addEventListener('change', syncMembers);
+
+            // Apply filtering on initial page load, including edit forms.
+            syncMembers();
+        });
+    </script>
+{% endblock %}

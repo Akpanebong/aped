@@ -1,0 +1,3 @@
+{% extends 'base.html' %}
+{% block title %}Delete monitoring form · APED{% endblock %}
+{% block content %}<div class="confirm-card"><div class="warning-icon">!</div><h1>Delete this monitoring form?</h1><p>This will permanently delete <strong>{{ object.name }}</strong>. Forms with saved records cannot be deleted.</p><form method="post">{% csrf_token %}<a class="btn btn-light" href="{% url 'form_definition_list' %}">Cancel</a> <button class="btn btn-danger">Delete permanently</button></form></div>{% endblock %}

@@ -1,0 +1,1095 @@
+
+/* ==========================================================================
+   APED MONITORING SYSTEM
+   CORE DESIGN SYSTEM
+   Version: Optimized
+   Dependencies: Bootstrap 5
+   ========================================================================== */
+
+/* 1. DESIGN TOKENS
+   ========================================================================== */
+
+:root {
+    color-scheme: light;
+
+    /* Brand colours */
+    --forest: #173e33;
+    --forest2: #245b48;
+    --forest3: #2f7056;
+    --lime: #a7cf43;
+    --ink: #172b25;
+    --muted: #68786f;
+    --line: #e3eae5;
+    --canvas: #f5f8f6;
+    --blue: #246c55;
+
+    /* Surfaces */
+    --white: #fff;
+    --surface-soft: #f8faf8;
+    --surface-green: #edf5ed;
+    --border-soft: #edf1ee;
+
+    /* Semantic colours */
+    --success-bg: #e4f5e9;
+    --success-text: #267245;
+    --info-bg: #e6efff;
+    --info-text: #315ca5;
+    --warning-bg: #fff3d9;
+    --warning-text: #805d12;
+    --danger-bg: #fbe8e8;
+    --danger-text: #a13d3d;
+
+    /* Border radius */
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 15px;
+    --radius-xl: 22px;
+    --radius-pill: 50rem;
+
+    /* Shadows */
+    --shadow-card: 0 5px 18px rgb(28 69 52 / 5%);
+    --shadow-card-hover: 0 10px 28px rgb(28 69 52 / 9%);
+    --shadow-nav: 0 3px 14px rgb(25 61 48 / 8%);
+    --shadow-login: 0 20px 70px rgb(22 59 48 / 9%);
+
+    /* Spacing */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 32px;
+    --space-8: 40px;
+
+    /* Layout */
+    --nav-height: 68px;
+    --content-width: 1600px;
+
+    /* Typography */
+    --font-body: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+
+/* 2. GLOBAL FOUNDATION
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    min-width: 320px;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding-top: var(--nav-height);
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+img,
+svg,
+video,
+canvas {
+    max-width: 100%;
+}
+
+img {
+    height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button,
+[type="button"],
+[type="submit"],
+[type="reset"] {
+    cursor: pointer;
+}
+
+a {
+    color: var(--forest2);
+    text-underline-offset: 2px;
+}
+
+a:hover {
+    color: var(--forest);
+}
+
+:focus-visible {
+    outline: 3px solid rgb(167 207 67 / 80%);
+    outline-offset: 3px;
+}
+
+::selection {
+    background: rgb(167 207 67 / 35%);
+    color: var(--forest);
+}
+
+.page-wrap {
+    width: 100%;
+    max-width: var(--content-width);
+    margin-inline: auto;
+    padding-inline: clamp(12px, 2vw, 28px);
+}
+
+
+/* 3. NAVIGATION AND BRANDING
+   ========================================================================== */
+
+.aped-nav {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 1030;
+    min-height: var(--nav-height);
+    background: linear-gradient(100deg, #15382f, #245844);
+    box-shadow: var(--shadow-nav);
+}
+
+.aped-nav .navbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: var(--white);
+    letter-spacing: .02em;
+    text-decoration: none;
+}
+
+.brand-mark {
+    display: inline-grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--lime);
+    color: #183b30;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.brand-sub {
+    display: block;
+    color: #c7d8ce;
+    font-size: 9px;
+    letter-spacing: .15em;
+}
+
+.brand-mark.big {
+    width: 52px;
+    height: 52px;
+    flex-basis: 52px;
+    margin-bottom: 28px;
+    font-size: 28px;
+}
+
+
+/* 4. PAGE HEADINGS
+   ========================================================================== */
+
+.page-title {
+    margin: .35rem 0 .45rem;
+    color: var(--ink);
+    font-size: clamp(1.65rem, 3vw, 2.35rem);
+    font-weight: 750;
+    letter-spacing: -.045em;
+    line-height: 1.2;
+}
+
+.eyebrow {
+    color: #59816c;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.page-intro,
+.page-header {
+    margin-bottom: 24px;
+}
+
+.page-intro p,
+.page-header p {
+    max-width: 760px;
+    margin-bottom: 0;
+    color: var(--muted);
+}
+
+
+/* 5. SHARED CARDS AND PANELS
+   ========================================================================== */
+
+.metric-card,
+.panel,
+.tool-card,
+.filter-bar {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    box-shadow: var(--shadow-card);
+}
+
+.panel {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.metric-card {
+    position: relative;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+    padding: 22px;
+}
+
+.metric-card::after {
+    position: absolute;
+    inset: 20px auto 20px 0;
+    width: 4px;
+    border-radius: 0 5px 5px 0;
+    background: var(--lime);
+    content: "";
+}
+
+.metric-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.metric-value {
+    margin: 7px 0;
+    font-size: clamp(1.55rem, 2.5vw, 2.2rem);
+    font-weight: 780;
+    letter-spacing: -.05em;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-foot {
+    color: #849189;
+    font-size: 11px;
+}
+
+
+/* 6. PANEL HEADINGS
+   ========================================================================== */
+
+.panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 19px 22px;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.panel-heading h2 {
+    margin: 0 0 4px;
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.panel-heading p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.panel-heading > a {
+    flex: 0 0 auto;
+    color: var(--forest2);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.panel-heading > a:hover {
+    text-decoration: underline;
+}
+
+
+/* 7. TABLES
+   ========================================================================== */
+
+.table {
+    margin: 0;
+    color: var(--ink);
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+.table thead th {
+    padding: 13px 15px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-soft);
+    color: #68786f;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.table tbody td {
+    padding: 13px 15px;
+    border-color: var(--border-soft);
+}
+
+.table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.table a {
+    color: var(--forest2);
+}
+
+.table a:hover {
+    color: var(--forest);
+}
+
+.table-responsive {
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    -webkit-overflow-scrolling: touch;
+}
+
+
+/* 8. STATUS BADGES
+   ========================================================================== */
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    padding: 5px 9px;
+    border-radius: var(--radius-pill);
+    background: #eef2ef;
+    color: #59685f;
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1.4;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.status-submitted,
+.status-done,
+.status-approved,
+.status-completed {
+    background: var(--success-bg);
+    color: var(--success-text);
+}
+
+.status-reviewed,
+.status-verified {
+    background: var(--info-bg);
+    color: var(--info-text);
+}
+
+.status-draft,
+.status-in_progress,
+.status-pending {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+}
+
+.status-cancelled,
+.status-rejected,
+.status-overdue {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+}
+
+
+/* 9. MONITORING TOOL LISTS
+   ========================================================================== */
+
+.tool-mini-list {
+    padding-inline: 18px;
+}
+
+.tool-mini {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 15px 4px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.tool-mini:last-child {
+    border-bottom: 0;
+}
+
+.tool-mini:hover {
+    color: var(--forest2);
+}
+
+.tool-mini strong {
+    display: block;
+    font-size: 12px;
+}
+
+.tool-mini small {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.tool-mini > span:last-child {
+    margin-left: auto;
+    color: #648071;
+}
+
+.tool-symbol,
+.step-number {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: var(--surface-green);
+    color: var(--forest2);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+/* 10. EMPTY STATES
+   ========================================================================== */
+
+.empty-state {
+    padding: 38px 20px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.empty-state h3 {
+    margin-bottom: 8px;
+    color: var(--ink);
+    font-size: 17px;
+    font-weight: 750;
+}
+
+.empty-state p {
+    margin-bottom: 0;
+    font-size: 12px;
+}
+
+.empty-icon {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    margin: 0 auto 14px;
+    place-items: center;
+    border-radius: 14px;
+    background: var(--surface-green);
+    color: var(--forest2);
+    font-size: 22px;
+}
+
+
+/* 11. BUTTONS
+   ========================================================================== */
+
+.btn {
+    min-height: 38px;
+    padding: 9px 15px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    transition: color .15s ease, background-color .15s ease,
+        border-color .15s ease, box-shadow .15s ease;
+}
+
+.btn-sm {
+    min-height: 31px;
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+.btn-lg {
+    min-height: 46px;
+    padding: 11px 19px;
+    font-size: 13px;
+}
+
+.btn-primary {
+    border-color: var(--forest2);
+    background: var(--forest2);
+    color: var(--white);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    border-color: #153e31;
+    background: #153e31;
+    color: var(--white);
+}
+
+.btn-outline-primary {
+    border-color: #c5d8cd;
+    background: var(--white);
+    color: var(--forest2);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    border-color: var(--forest2);
+    background: var(--forest2);
+    color: var(--white);
+}
+
+.btn:disabled,
+.btn.disabled {
+    cursor: not-allowed;
+    opacity: .6;
+}
+
+
+/* 12. FORMS
+   ========================================================================== */
+
+.form-control,
+.form-select {
+    min-height: 40px;
+    border-color: #d7e1da;
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    font-size: 12px;
+}
+
+.form-control::placeholder {
+    color: #9aa69f;
+    opacity: 1;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #6da68a;
+    box-shadow: 0 0 0 .2rem rgb(45 118 82 / 12%);
+}
+
+.form-label {
+    margin-bottom: 6px;
+    color: #53635a;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.form-text {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.form-check-input:checked {
+    border-color: var(--forest2);
+    background-color: var(--forest2);
+}
+
+.form-check-input:focus {
+    border-color: #6da68a;
+    box-shadow: 0 0 0 .2rem rgb(45 118 82 / 12%);
+}
+
+.filter-bar {
+    padding: 17px;
+}
+
+.filter-bar label {
+    margin-bottom: 6px;
+}
+
+.record-form .panel-heading {
+    padding: 16px 20px;
+}
+
+.record-form .panel-heading h2 {
+    font-size: 14px;
+}
+
+.record-form .panel-heading p {
+    margin-top: 4px;
+}
+
+.record-form .form-label {
+    display: block;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    padding: 10px 0 30px;
+}
+
+
+/* 13. MONITORING TOOL CARDS
+   ========================================================================== */
+
+.tool-card {
+    display: flex;
+    height: 100%;
+    min-width: 0;
+    flex-direction: column;
+    padding: 22px;
+    transition: border-color .15s ease, box-shadow .15s ease,
+        transform .15s ease;
+}
+
+.tool-card:hover {
+    border-color: #d3e2d8;
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+}
+
+.tool-card h2 {
+    margin: 17px 0 8px;
+    font-size: 17px;
+    font-weight: 750;
+    letter-spacing: -.02em;
+}
+
+.tool-card p {
+    flex: 1;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.tool-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.category-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-green);
+    color: var(--forest2);
+    font-size: 10px;
+    font-weight: 750;
+}
+
+
+/* 14. DETAIL PAGES
+   ========================================================================== */
+
+.detail-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 0 18px;
+    margin: 0;
+    padding: 12px 20px;
+}
+
+.detail-list dt,
+.detail-list dd {
+    min-width: 0;
+    margin: 0;
+    padding: 9px 0;
+    border-bottom: 1px solid #f0f3f1;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.detail-list dt {
+    color: var(--muted);
+}
+
+.detail-list dd {
+    font-weight: 650;
+}
+
+.detail-list dt:last-of-type,
+.detail-list dd:last-of-type {
+    border-bottom: 0;
+}
+
+.subheading {
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.data-section {
+    padding: 20px 23px;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.data-section:last-child {
+    border-bottom: 0;
+}
+
+.data-section h3 {
+    margin: 0 0 16px;
+    color: var(--forest2);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.data-label {
+    margin-bottom: 5px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.data-value {
+    font-size: 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+
+/* 15. FOLLOW-UP TRACKING
+   ========================================================================== */
+
+.followup-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 17px 20px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12px;
+}
+
+.followup-row:last-child {
+    border-bottom: 0;
+}
+
+.followup-dot {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: #d8a943;
+}
+
+.followup-dot.done {
+    background: #4d9c67;
+}
+
+.followup-row .status {
+    margin-inline: 4px;
+}
+
+.count-bubble {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    padding: 4px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-green);
+    color: var(--forest2);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* 16. CONFIRMATION SCREENS
+   ========================================================================== */
+
+.confirm-card {
+    width: min(100% - 24px, 550px);
+    margin: 7vh auto;
+    padding: 38px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--white);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+}
+
+.warning-icon {
+    display: grid;
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 20px;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff1e6;
+    color: #a95c20;
+    font-size: 23px;
+    font-weight: 900;
+}
+
+.confirm-card h1 {
+    font-size: 23px;
+    font-weight: 800;
+}
+
+.confirm-card p {
+    margin: 12px 0 25px;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.form-narrow {
+    width: min(100%, 680px);
+    margin-inline: auto;
+}
+
+
+/* 17. LOGIN
+   ========================================================================== */
+
+.login-shell {
+    display: grid;
+    width: min(100% - 24px, 1000px);
+    min-height: 520px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    margin: 5vh auto;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-xl);
+    background: var(--white);
+    box-shadow: var(--shadow-login);
+}
+
+.login-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 50px;
+    background: radial-gradient(
+        circle at 80% 10%,
+        #366f50 0,
+        #1c4a39 35%,
+        #12362d 100%
+    );
+    color: var(--white);
+}
+
+.login-brand .eyebrow {
+    color: #c5e19c;
+}
+
+.login-brand h1 {
+    margin: 15px 0;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -.05em;
+    line-height: 1.12;
+}
+
+.muted-light {
+    max-width: 310px;
+    color: #c7d7cf;
+    line-height: 1.7;
+}
+
+.login-panel {
+    align-self: center;
+    padding: 55px 50px;
+}
+
+.login-panel h2 {
+    margin-top: 10px;
+    font-size: 29px;
+    font-weight: 800;
+    letter-spacing: -.04em;
+}
+
+.login-panel .eyebrow {
+    color: #648c71;
+}
+
+.login-panel .form-control,
+.login-panel .btn {
+    min-height: 48px;
+}
+
+
+/* 18. UTILITY HELPERS
+   ========================================================================== */
+
+.text-aped {
+    color: var(--forest2) !important;
+}
+
+.bg-aped-soft {
+    background: var(--surface-green) !important;
+}
+
+.border-aped {
+    border-color: var(--line) !important;
+}
+
+.min-w-0 {
+    min-width: 0 !important;
+}
+
+.overflow-wrap {
+    overflow-wrap: anywhere;
+}
+
+
+/* 19. RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+    .login-shell {
+        max-width: 720px;
+    }
+
+    .login-brand,
+    .login-panel {
+        padding: 35px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    body {
+        font-size: 13px;
+    }
+
+    .brand-sub {
+        display: none;
+    }
+
+    .login-shell {
+        grid-template-columns: minmax(0, 1fr);
+        margin: 18px auto;
+        border-radius: 16px;
+    }
+
+    .login-brand {
+        min-height: 220px;
+        padding: 28px;
+    }
+
+    .brand-mark.big {
+        margin-bottom: 18px;
+    }
+
+    .login-brand h1 {
+        font-size: 2rem;
+    }
+
+    .login-panel {
+        padding: 32px 25px;
+    }
+
+    .panel-heading {
+        flex-wrap: wrap;
+        padding: 16px;
+    }
+
+    .metric-card {
+        padding: 16px;
+    }
+
+    .metric-value {
+        font-size: 1.8rem;
+    }
+
+    .followup-row {
+        flex-wrap: wrap;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+    }
+
+    .confirm-card {
+        margin: 24px auto;
+        padding: 26px 20px;
+    }
+
+    .data-section {
+        padding: 18px 16px;
+    }
+
+    .detail-list {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 12px 16px;
+    }
+
+    .detail-list dt {
+        padding-bottom: 2px;
+        border-bottom: 0;
+    }
+
+    .detail-list dd {
+        padding-top: 2px;
+    }
+
+    .form-actions {
+        flex-wrap: wrap;
+    }
+
+    .form-actions > * {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .login-panel {
+        padding: 26px 18px;
+    }
+
+    .metric-value {
+        font-size: 1.6rem;
+    }
+
+    .table thead th,
+    .table tbody td {
+        padding: 10px;
+    }
+}
+
+
+/* 20. REDUCED MOTION
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}

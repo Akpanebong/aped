@@ -1,0 +1,435 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} · APED{% endblock %}
+
+{% block body_class %}aped-activity-form-page{% endblock %}
+
+{% block content %}
+<div class="activity-form-shell">
+
+    <!-- Page header -->
+    <header class="activity-form-header">
+        <div>
+            <a href="{% url 'activity_list' %}" class="activity-form-back">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+                Back to activities
+            </a>
+
+            <div class="activity-form-eyebrow mt-3">
+                FIELD ACTIVITIES
+            </div>
+
+            <h1 class="activity-form-title">{{ page_title }}</h1>
+
+            <p class="activity-form-description">
+                Enter the activity details below. These records can be used
+                to organise field attendance and programme monitoring.
+            </p>
+        </div>
+
+        <div class="activity-form-header-icon" aria-hidden="true">
+            <i class="bi bi-calendar2-event"></i>
+        </div>
+    </header>
+
+    <!-- Form panel -->
+    <section class="activity-form-panel">
+
+        <div class="activity-form-panel-heading">
+            <div>
+                <h2>Activity information</h2>
+                <p>Complete the required fields before saving.</p>
+            </div>
+
+            <span class="activity-required-note">
+                <span class="text-danger">*</span> Required fields
+            </span>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    <div class="fw-semibold mb-1">
+                        Unable to save this activity
+                    </div>
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+
+<div class="activity-form-fields">
+
+    <!-- First row: Project, Activity name, Activity date -->
+    {% for field in form %}
+        {% if field.name == "project" or field.name == "activity_name" or field.name == "activity_date" %}
+            <div class="activity-form-field {% if field.errors %}has-error{% endif %}">
+                <label class="form-label" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span class="text-danger">*</span>
+                    {% endif %}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+
+                {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    <!-- Remaining fields -->
+    {% for field in form %}
+        {% if field.name != "project" and field.name != "activity_name" and field.name != "activity_date" %}
+            <div class="activity-form-field
+                {% if field.errors %}has-error{% endif %}
+                {% if field.name == 'notes' %}activity-notes-field{% endif %}
+                {% if field.field.widget.input_type == 'checkbox' %}activity-checkbox-field{% endif %}">
+
+                {% if field.field.widget.input_type == 'checkbox' %}
+                    <div class="form-check">
+                        {{ field }}
+                        <label class="form-check-label" for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                            {% endif %}
+                        </label>
+                    </div>
+                {% else %}
+                    <label class="form-label" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                        {% if field.field.required %}
+                            <span class="text-danger">*</span>
+                        {% endif %}
+                    </label>
+
+                    {{ field }}
+                {% endif %}
+
+                {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+
+                {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+</div>
+
+
+            <div class="activity-form-actions">
+                <a href="{% url 'activity_list' %}"
+                   class="btn btn-light border">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+                    Save activity
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <div class="activity-form-footer">
+        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+        Saved activities can be selected when creating attendance registers.
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* =========================================================
+   APED ACTIVITY CREATE / UPDATE FORM
+   ========================================================= */
+
+.aped-activity-form-page {
+    background: #f5f8f6;
+}
+
+.activity-form-shell {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 2rem;
+}
+
+.activity-form-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.activity-form-back {
+    display: inline-flex;
+    align-items: center;
+    color: #47745d;
+    font-size: .88rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.activity-form-back:hover {
+    color: #24563b;
+}
+
+.activity-form-eyebrow {
+    color: #198a52;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+.activity-form-title {
+    margin: .35rem 0 .5rem;
+    color: #183c2b;
+    font-size: clamp(1.6rem, 3vw, 2rem);
+    font-weight: 750;
+    letter-spacing: -.035em;
+}
+
+.activity-form-description {
+    max-width: 620px;
+    margin: 0;
+    color: #6b7c72;
+    font-size: .94rem;
+    line-height: 1.65;
+}
+
+.activity-form-header-icon {
+    display: grid;
+    flex: 0 0 58px;
+    width: 58px;
+    height: 58px;
+    place-items: center;
+    border: 1px solid #dcebe1;
+    border-radius: 16px;
+    background: #eaf5ed;
+    color: #198a52;
+    font-size: 1.55rem;
+}
+
+.activity-form-panel {
+    overflow: hidden;
+    padding: 1.6rem;
+    border: 1px solid #e4ebe6;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 5px 20px rgb(28 69 52 / 4%);
+}
+
+.activity-form-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #edf1ee;
+}
+
+.activity-form-panel-heading h2 {
+    margin: 0 0 .3rem;
+    color: #263d30;
+    font-size: 1.08rem;
+    font-weight: 700;
+}
+
+.activity-form-panel-heading p {
+    margin: 0;
+    color: #7a8980;
+    font-size: .84rem;
+}
+
+.activity-required-note {
+    color: #77857c;
+    font-size: .76rem;
+    white-space: nowrap;
+}
+
+/* Three-column form layout */
+.activity-form-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem 1.4rem;
+}
+
+.activity-form-field {
+    min-width: 0;
+}
+
+/* Full-width Notes field */
+.activity-notes-field {
+    grid-column: 1 / -1;
+}
+
+.activity-notes-field textarea {
+    width: 100%;
+    min-height: 130px;
+}
+
+.activity-form-field .form-label {
+    display: block;
+    margin-bottom: .45rem;
+    color: #34483b;
+    font-size: .86rem;
+    font-weight: 650;
+}
+
+.activity-form-field input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.activity-form-field select,
+.activity-form-field textarea {
+    width: 100%;
+    min-height: 43px;
+    padding: .65rem .8rem;
+    border: 1px solid #dce5df;
+    border-radius: 9px;
+    background-color: #fff;
+    color: #263d30;
+    font-size: .9rem;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.activity-form-field textarea {
+    min-height: 105px;
+    resize: vertical;
+}
+
+.activity-form-field input:focus,
+.activity-form-field select:focus,
+.activity-form-field textarea:focus {
+    border-color: #198a52;
+    outline: 0;
+    box-shadow: 0 0 0 .2rem rgb(25 138 82 / 10%);
+}
+
+.activity-form-field .form-text {
+    margin-top: .4rem;
+    color: #849188;
+    font-size: .77rem;
+}
+
+.activity-form-field.has-error input,
+.activity-form-field.has-error select,
+.activity-form-field.has-error textarea {
+    border-color: #dc3545;
+}
+
+.activity-form-field .invalid-feedback {
+    margin-top: .35rem;
+    font-size: .78rem;
+}
+
+.activity-checkbox-field {
+    display: flex;
+    align-items: center;
+    min-height: 43px;
+}
+
+.activity-checkbox-field .form-check {
+    margin: 0;
+}
+
+.activity-checkbox-field .form-check-input {
+    cursor: pointer;
+}
+
+.activity-checkbox-field .form-check-label {
+    color: #34483b;
+    font-size: .88rem;
+}
+
+.activity-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .7rem;
+    padding-top: 1.3rem;
+    margin-top: 1.6rem;
+    border-top: 1px solid #edf1ee;
+}
+
+.activity-form-actions .btn {
+    min-height: 41px;
+    padding: .6rem 1.1rem;
+    border-radius: 9px;
+    font-size: .87rem;
+    font-weight: 650;
+}
+
+.activity-form-footer {
+    margin-top: 1rem;
+    color: #7a8980;
+    font-size: .8rem;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+    .activity-form-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .activity-notes-field {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Mobile */
+@media (max-width: 540px) {
+    .activity-form-header {
+        gap: .8rem;
+    }
+
+    .activity-form-header-icon {
+        flex-basis: 46px;
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        font-size: 1.25rem;
+    }
+
+    .activity-form-panel {
+        padding: 1.1rem;
+    }
+
+    .activity-form-panel-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .activity-form-fields {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .activity-notes-field {
+        grid-column: 1;
+    }
+
+    .activity-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .activity-form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

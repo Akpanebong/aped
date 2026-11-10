@@ -1,0 +1,612 @@
+
+{% extends "base.html" %}
+
+{% block title %}Activities · APED{% endblock %}
+{% block body_class %}aped-activity-page{% endblock %}
+
+{% block content %}
+<div class="activity-shell">
+
+    <!-- Page header -->
+    <header class="activity-header">
+        <div class="activity-header-content">
+            <div class="activity-eyebrow">
+                <i class="bi bi-calendar-event" aria-hidden="true"></i>
+                Field activities
+            </div>
+
+            <h1 class="activity-title">Activities</h1>
+
+            <p class="activity-description">
+                Manage programme activities and organise the field sessions
+                used for participant attendance recording.
+            </p>
+        </div>
+
+        <div class="activity-header-actions">
+            <a href="{% url 'project_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-folder2-open me-1" aria-hidden="true"></i>
+                Projects
+            </a>
+
+            <a href="{% url 'form_definition_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-ui-checks-grid me-1" aria-hidden="true"></i>
+                Monitoring forms
+            </a>
+
+            <a href="{% url 'activity_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                New activity
+            </a>
+        </div>
+    </header>
+
+    <!-- Activity overview -->
+    <section class="activity-overview">
+        <div class="activity-overview-card">
+            <div class="activity-overview-icon">
+                <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+            </div>
+
+            <div>
+                <span class="activity-overview-label">Registered activities</span>
+                <strong class="activity-overview-value">
+                    {{ activities|length }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="activity-overview-note">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            Activities are linked to projects and can be used to create
+            participant attendance sheets.
+        </div>
+    </section>
+
+    <!-- Activity register -->
+    <section class="activity-register-panel">
+
+        <div class="activity-register-heading">
+            <div>
+                <h2>Activity register</h2>
+                <p>Activities available for participant attendance recording.</p>
+            </div>
+
+            <span class="activity-count">
+                {{ activities|length }}
+                activit{{ activities|length|pluralize:"y,ies" }}
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table activity-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Activity</th>
+                        <th scope="col">Project</th>
+                        <th scope="col">Village</th>
+                        <th scope="col">Activity date</th>
+                        <th scope="col">Facilitator</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for activity in activities %}
+                        <tr>
+                            <!-- Activity -->
+                            <td>
+                                <div class="activity-name-cell">
+                                    <span class="activity-name">
+                                        {{ activity.activity_name }}
+                                    </span>
+
+                                    <span class="activity-record-reference">
+                                        Activity #{{ activity.pk }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- Project -->
+                            <td>
+                                <div class="activity-project-cell">
+                                    <i class="bi bi-folder2-open" aria-hidden="true"></i>
+                                    <span>
+                                        {{ activity.project.name|default:"No project assigned" }}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- Village -->
+                            <td>
+                                <div class="activity-location-cell">
+                                    <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                    <span>{{ activity.village|default:"—" }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Date -->
+                            <td>
+                                <time
+                                    class="activity-date"
+                                    {% if activity.activity_date %}
+                                        datetime="{{ activity.activity_date|date:'Y-m-d' }}"
+                                    {% endif %}
+                                >
+                                    <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>
+                                    {{ activity.activity_date|date:"d M Y"|default:"—" }}
+                                </time>
+                            </td>
+
+                            <!-- Facilitator -->
+                            <td>
+                                <div class="activity-facilitator">
+                                    <i class="bi bi-person-badge" aria-hidden="true"></i>
+                                    <span>{{ activity.facilitator|default:"Not assigned" }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-end">
+                                <div class="activity-row-actions">
+                                    <a
+                                        href="{% url 'attendance_create' %}?activity={{ activity.pk }}"
+                                        class="activity-action-link"
+                                        title="Create attendance sheet for this activity"
+                                        aria-label="Record attendance for {{ activity.activity_name }}"
+                                    >
+                                        <i class="bi bi-people" aria-hidden="true"></i>
+                                        <span>Attendance</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+
+                    {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="activity-empty-state">
+                                    <div class="activity-empty-icon">
+                                        <i class="bi bi-calendar2-plus" aria-hidden="true"></i>
+                                    </div>
+
+                                    <h3>No activities registered yet</h3>
+
+                                    <p>
+                                        Create a programme activity before
+                                        recording participant attendance.
+                                        Each activity can have its own
+                                        attendance sheet.
+                                    </p>
+
+                                    <a
+                                        href="{% url 'activity_create' %}"
+                                        class="btn btn-primary"
+                                    >
+                                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                                        Create first activity
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if activities %}
+            <div class="activity-register-footer">
+                <span>
+                    <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                    Select Attendance to create a participant register for an activity.
+                </span>
+            </div>
+        {% endif %}
+
+    </section>
+</div>
+<style>
+
+/* =========================================================
+   APED ACTIVITY REGISTER
+   ========================================================= */
+
+.aped-activity-page {
+    --activity-border: var(--border, #e5ebe7);
+    --activity-muted: var(--text-muted, #718078);
+    --activity-heading: var(--heading-color, #20382e);
+    --activity-forest: var(--forest, #173e33);
+}
+
+.activity-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+/* Header */
+
+.activity-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding-bottom: 1.35rem;
+    border-bottom: 1px solid var(--activity-border);
+}
+
+.activity-header-content {
+    max-width: 700px;
+}
+
+.activity-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin-bottom: .5rem;
+    color: var(--activity-forest);
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+.activity-title {
+    margin: 0;
+    color: var(--activity-heading);
+    font-size: clamp(1.65rem, 3vw, 2.2rem);
+    font-weight: 750;
+    letter-spacing: -.035em;
+}
+
+.activity-description {
+    margin: .6rem 0 0;
+    color: var(--activity-muted);
+    font-size: .9rem;
+    line-height: 1.65;
+}
+
+.activity-header-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .6rem;
+}
+
+.activity-header-actions .btn {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .81rem;
+    font-weight: 650;
+}
+
+/* Overview */
+
+.activity-overview {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.activity-overview-card {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    min-width: 210px;
+    padding: .9rem 1.1rem;
+    background: var(--surface, #fff);
+    border: 1px solid var(--activity-border);
+    border-radius: 11px;
+}
+
+.activity-overview-icon {
+    display: grid;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    color: var(--activity-forest);
+    background: #edf5f0;
+    border-radius: 10px;
+    font-size: 1.15rem;
+}
+
+.activity-overview-card > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+
+.activity-overview-label {
+    color: var(--activity-muted);
+    font-size: .73rem;
+    font-weight: 600;
+}
+
+.activity-overview-value {
+    color: var(--activity-heading);
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.activity-overview-note {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--activity-muted);
+    font-size: .78rem;
+    line-height: 1.5;
+}
+
+/* Register panel */
+
+.activity-register-panel {
+    overflow: hidden;
+    background: var(--surface, #fff);
+    border: 1px solid var(--activity-border);
+    border-radius: var(--card-radius, 14px);
+    box-shadow: var(--shadow-card, 0 3px 14px rgb(24 49 38 / 4%));
+}
+
+.activity-register-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.25rem 1.35rem;
+    border-bottom: 1px solid var(--activity-border);
+}
+
+.activity-register-heading h2 {
+    margin: 0;
+    color: var(--activity-heading);
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+.activity-register-heading p {
+    margin: .3rem 0 0;
+    color: var(--activity-muted);
+    font-size: .81rem;
+}
+
+.activity-count {
+    padding: .4rem .7rem;
+    color: var(--activity-forest);
+    background: #edf5f0;
+    border-radius: 30px;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Table */
+
+.activity-table {
+    min-width: 950px;
+}
+
+.activity-table thead th {
+    padding: .85rem 1.1rem;
+    color: #69776f;
+    background: #f8faf9;
+    border-bottom: 1px solid var(--activity-border);
+    font-size: .7rem;
+    font-weight: 750;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.activity-table tbody td {
+    padding: 1rem 1.1rem;
+    color: #43534a;
+    border-color: #edf1ee;
+    font-size: .83rem;
+    vertical-align: middle;
+}
+
+.activity-table tbody tr {
+    transition: background .15s ease;
+}
+
+.activity-table tbody tr:hover {
+    background: #fafcfb;
+}
+
+/* Activity name */
+
+.activity-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    min-width: 180px;
+}
+
+.activity-name {
+    color: var(--activity-heading);
+    font-weight: 700;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.activity-record-reference {
+    color: var(--activity-muted);
+    font-size: .7rem;
+}
+
+/* Project, location, date and facilitator */
+
+.activity-project-cell,
+.activity-location-cell,
+.activity-facilitator {
+    display: flex;
+    align-items: flex-start;
+    gap: .45rem;
+    min-width: 110px;
+    line-height: 1.5;
+}
+
+.activity-project-cell i,
+.activity-location-cell i,
+.activity-facilitator i {
+    flex-shrink: 0;
+    margin-top: .1rem;
+    color: #849188;
+}
+
+.activity-date {
+    display: inline-flex;
+    align-items: center;
+    color: #536158;
+    font-size: .8rem;
+    white-space: nowrap;
+}
+
+.activity-date i {
+    color: #849188;
+}
+
+/* Actions */
+
+.activity-row-actions {
+    display: inline-flex;
+    justify-content: flex-end;
+}
+
+.activity-action-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    padding: .45rem .7rem;
+    color: var(--activity-forest);
+    background: #edf5f0;
+    border: 1px solid #dcebe1;
+    border-radius: 7px;
+    font-size: .76rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.activity-action-link:hover {
+    color: var(--activity-forest);
+    background: #e2efe6;
+    border-color: #c8dfcf;
+}
+
+/* Empty state */
+
+.activity-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3.5rem 1.5rem;
+    text-align: center;
+}
+
+.activity-empty-icon {
+    display: grid;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 1rem;
+    place-items: center;
+    color: var(--activity-forest);
+    background: #edf5f0;
+    border-radius: 16px;
+    font-size: 1.45rem;
+}
+
+.activity-empty-state h3 {
+    margin: 0;
+    color: var(--activity-heading);
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+.activity-empty-state p {
+    max-width: 430px;
+    margin: .55rem 0 1.1rem;
+    color: var(--activity-muted);
+    font-size: .84rem;
+    line-height: 1.65;
+}
+
+.activity-empty-state .btn {
+    font-size: .82rem;
+    font-weight: 650;
+}
+
+/* Footer */
+
+.activity-register-footer {
+    padding: .8rem 1.25rem;
+    color: var(--activity-muted);
+    background: #fafcfb;
+    border-top: 1px solid var(--activity-border);
+    font-size: .75rem;
+}
+
+/* Responsive */
+
+@media (max-width: 767.98px) {
+    .activity-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .activity-header-actions {
+        width: 100%;
+    }
+
+    .activity-header-actions .btn {
+        flex: 1;
+    }
+
+    .activity-overview {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .activity-overview-card {
+        width: 100%;
+    }
+
+    .activity-register-heading {
+        padding: 1rem;
+    }
+
+    .activity-table thead th,
+    .activity-table tbody td {
+        padding: .8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .activity-header-actions {
+        flex-direction: column;
+    }
+
+    .activity-header-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .activity-table tbody tr,
+    .activity-action-link {
+        transition: none;
+    }
+}
+
+</style>
+{% endblock %}
