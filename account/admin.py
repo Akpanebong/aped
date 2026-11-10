@@ -7,17 +7,18 @@ from .models import StaffProfile
 @admin.register(StaffProfile)
 class StaffUserAdmin(UserAdmin):
     form = AdminUserChangeForm
+    readonly_fields = ("staff_id",)
     fieldsets = (
         (None, {"fields": ("username", "password")}),
         ("Personal info", {"fields": ("first_name", "last_name", "email")}),
         ("APED staff profile", {"fields": ("staff_id", "role", "job_title", "department", "phone", "location")}),
-        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (
         (None, {"classes": ("wide",), "fields": ("username", "password1", "password2", "email", "role")}),
     )
-    filter_horizontal = ()
+    filter_horizontal = ("groups", "user_permissions")
     list_display = ("username", "first_name", "last_name", "email", "staff_role", "is_active")
     list_filter = ("is_active", "is_superuser", "role")
     search_fields = ("username", "staff_id", "first_name", "last_name", "email", "department")
