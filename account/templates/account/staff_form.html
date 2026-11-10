@@ -1,39 +1,491 @@
 {% extends 'base.html' %}
+
 {% block title %}{{ page_title }} · APED{% endblock %}
+
+{% block body_class %}aped-staff-form-page{% endblock %}
+
 {% block content %}
-<div class="form-narrow" style="max-width: 900px;">
-  <a href="{% url 'staff_list' %}">← Staff accounts</a>
-  <div class="eyebrow mt-3">STAFF ACCOUNT</div>
-  <h1 class="page-title">{{ page_title }}</h1>
-  {% if not staff_member %}<p class="text-muted">A secure staff ID, username and temporary password will be generated automatically and emailed to the staff member.</p>{% endif %}
-  <form method="post" class="panel p-4 mt-3">
-    {% csrf_token %}
-    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
-    <div class="row g-3">
-      <div class="col-12"><h2 class="h5 mb-0">Identity and contact</h2></div>
-      {% if staff_member %}<div class="col-md-6"><label class="form-label">Staff ID</label><input class="form-control" value="{{ staff_member.staff_id }}" readonly><div class="form-text">Staff ID is permanent and cannot be changed.</div></div>{% endif %}
-      {% for field in form %}
-        {% if field.name == 'first_name' or field.name == 'last_name' or field.name == 'email' or field.name == 'username' or field.name == 'phone' %}
-          <div class="col-md-6">
-            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
-            {{ field }}
-            {% for error in field.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
-          </div>
-        {% endif %}
-      {% endfor %}
-      <div class="col-12 mt-4"><h2 class="h5 mb-0">Role and placement</h2></div>
-      {% for field in form %}
-        {% if field.name == 'role' or field.name == 'job_title' or field.name == 'department' or field.name == 'location' %}
-          <div class="col-md-6">
-            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</label>
-            {{ field }}
-            {% for error in field.errors %}<div class="small text-danger mt-1">{{ error }}</div>{% endfor %}
-          </div>
-        {% endif %}
-      {% endfor %}
-      {% if form.is_active %}<div class="col-12 mt-2"><div class="form-check">{{ form.is_active }}<label class="form-check-label" for="{{ form.is_active.id_for_label }}">Account is active</label></div></div>{% endif %}
+<div class="staff-form-shell">
+
+    <!-- Page header -->
+    <header class="staff-form-header">
+        <div>
+            <a href="{% url 'staff_list' %}" class="staff-back-link">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+                Back to staff accounts
+            </a>
+
+            <div class="staff-form-eyebrow">
+                STAFF MANAGEMENT
+            </div>
+
+            <h1 class="staff-form-title">{{ page_title }}</h1>
+
+            <p class="staff-form-subtitle">
+                {% if staff_member %}
+                    Update staff account details, role and organisational placement.
+                {% else %}
+                    Create a staff account and configure the staff member's organisational role.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="staff-header-icon">
+            <i class="bi bi-person-gear" aria-hidden="true"></i>
+        </div>
+    </header>
+
+    {% if not staff_member %}
+    <div class="staff-creation-notice">
+        <div class="staff-notice-icon">
+            <i class="bi bi-shield-check" aria-hidden="true"></i>
+        </div>
+        <div>
+            <strong>Automatic account setup</strong>
+            <p>
+                A secure staff ID, username and temporary password will be
+                generated automatically and emailed to the staff member.
+            </p>
+        </div>
     </div>
-    <div class="d-flex gap-2 mt-4"><a href="{% url 'staff_list' %}" class="btn btn-light">Cancel</a><button class="btn btn-primary">Save staff account</button></div>
-  </form>
+    {% endif %}
+
+    <!-- Staff form -->
+    <form method="post" class="staff-form-panel">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                <div class="d-flex gap-2">
+                    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                    <div>{{ form.non_field_errors }}</div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Identity and contact -->
+        <section class="staff-form-section">
+            <div class="staff-section-heading">
+                <div class="staff-section-icon">
+                    <i class="bi bi-person-vcard" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h2>Identity and contact</h2>
+                    <p>Personal identification and communication details.</p>
+                </div>
+            </div>
+
+            <div class="staff-fields-grid">
+
+                {% if staff_member %}
+                <div class="staff-field">
+                    <label class="form-label">Staff ID</label>
+                    <input type="text"
+                           class="form-control"
+                           value="{{ staff_member.staff_id }}"
+                           readonly>
+                    <div class="form-text">
+                        <i class="bi bi-lock me-1" aria-hidden="true"></i>
+                        Permanent staff identification number.
+                    </div>
+                </div>
+                {% endif %}
+
+                {% for field in form %}
+                    {% if field.name == 'first_name' or field.name == 'last_name' or field.name == 'email' or field.name == 'username' or field.name == 'phone' %}
+                        <div class="staff-field">
+                            <label class="form-label" for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="field-error">
+                                    <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+            </div>
+        </section>
+
+        <div class="staff-section-divider"></div>
+
+        <!-- Role and placement -->
+        <section class="staff-form-section">
+            <div class="staff-section-heading">
+                <div class="staff-section-icon">
+                    <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h2>Role and placement</h2>
+                    <p>Define the staff member's responsibilities and work location.</p>
+                </div>
+            </div>
+
+            <div class="staff-fields-grid">
+
+                {% for field in form %}
+                    {% if field.name == 'role' or field.name == 'job_title' or field.name == 'department' or field.name == 'location' %}
+                        <div class="staff-field">
+                            <label class="form-label" for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="field-error">
+                                    <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+            </div>
+        </section>
+
+        {% if form.is_active %}
+        <div class="staff-account-status">
+            <div class="form-check">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    <strong>Account is active</strong>
+                    <span>Allow this staff member to access the APED system.</span>
+                </label>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Form actions -->
+        <div class="staff-form-actions">
+            <a href="{% url 'staff_list' %}" class="btn btn-light">
+                Cancel
+            </a>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+                Save staff account
+            </button>
+        </div>
+
+    </form>
+
+    <div class="staff-form-footer">
+        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+        Staff account information should be accurate and kept up to date.
+    </div>
+
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* =========================================================
+   APED STAFF ACCOUNT FORM
+   ========================================================= */
+
+.aped-staff-form-page .staff-form-shell {
+    max-width: 950px;
+    margin: 0 auto;
+}
+
+/* Page header */
+.aped-staff-form-page .staff-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.aped-staff-form-page .staff-back-link {
+    display: inline-block;
+    color: var(--text-muted, #718078);
+    text-decoration: none;
+    font-size: 0.83rem;
+    font-weight: 650;
+    margin-bottom: 17px;
+}
+
+.aped-staff-form-page .staff-back-link:hover {
+    color: var(--forest, #087f5b);
+}
+
+.aped-staff-form-page .staff-form-eyebrow {
+    color: var(--forest, #087f5b);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+}
+
+.aped-staff-form-page .staff-form-title {
+    color: var(--text-main, #18332b);
+    font-size: clamp(1.65rem, 3vw, 2.1rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin: 0 0 7px;
+}
+
+.aped-staff-form-page .staff-form-subtitle {
+    color: var(--text-muted, #718078);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.aped-staff-form-page .staff-header-icon {
+    width: 64px;
+    height: 64px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 18px;
+    background: #eaf5ef;
+    color: var(--forest, #087f5b);
+    font-size: 1.9rem;
+}
+
+/* Account creation notice */
+.aped-staff-form-page .staff-creation-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    border: 1px solid #d9eade;
+    border-radius: 12px;
+    background: #f0f8f2;
+}
+
+.aped-staff-form-page .staff-notice-icon {
+    color: var(--forest, #087f5b);
+    font-size: 1.35rem;
+}
+
+.aped-staff-form-page .staff-creation-notice strong {
+    display: block;
+    color: #245a40;
+    font-size: 0.87rem;
+    margin-bottom: 4px;
+}
+
+.aped-staff-form-page .staff-creation-notice p {
+    color: #61766a;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Main form panel */
+.aped-staff-form-page .staff-form-panel {
+    padding: 26px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-soft, #e5ebe7);
+    border-radius: 15px;
+    box-shadow: 0 4px 18px rgb(24 51 43 / 4%);
+}
+
+/* Form sections */
+.aped-staff-form-page .staff-form-section {
+    margin: 0;
+}
+
+.aped-staff-form-page .staff-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.aped-staff-form-page .staff-section-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: #eaf5ef;
+    color: var(--forest, #087f5b);
+    font-size: 1.15rem;
+}
+
+.aped-staff-form-page .staff-section-heading h2 {
+    color: var(--text-main, #18332b);
+    font-size: 1rem;
+    font-weight: 800;
+    margin: 0 0 4px;
+}
+
+.aped-staff-form-page .staff-section-heading p {
+    color: var(--text-muted, #718078);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.aped-staff-form-page .staff-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 19px 22px;
+}
+
+.aped-staff-form-page .staff-field {
+    min-width: 0;
+}
+
+.aped-staff-form-page .staff-field .form-label {
+    display: block;
+    color: var(--text-main, #18332b);
+    font-size: 0.81rem;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.aped-staff-form-page .staff-field .form-control,
+.aped-staff-form-page .staff-field .form-select {
+    width: 100%;
+    min-height: 43px;
+    border: 1px solid var(--border-soft, #dce5df);
+    border-radius: 8px;
+    font-size: 0.87rem;
+    box-shadow: none;
+}
+
+.aped-staff-form-page .staff-field .form-control:focus,
+.aped-staff-form-page .staff-field .form-select:focus {
+    border-color: var(--forest, #087f5b);
+    box-shadow: 0 0 0 3px rgb(8 127 91 / 10%);
+}
+
+.aped-staff-form-page .staff-field .form-control[readonly] {
+    background: #f3f6f4;
+    color: #65746b;
+}
+
+.aped-staff-form-page .staff-field .form-text {
+    color: var(--text-muted, #718078);
+    font-size: 0.75rem;
+    margin-top: 6px;
+}
+
+.aped-staff-form-page .field-error {
+    color: #bd3545;
+    font-size: 0.76rem;
+    margin-top: 6px;
+}
+
+.aped-staff-form-page .staff-section-divider {
+    height: 1px;
+    background: var(--border-soft, #e5ebe7);
+    margin: 27px 0;
+}
+
+/* Account status */
+.aped-staff-form-page .staff-account-status {
+    padding: 16px;
+    margin-top: 25px;
+    background: #f5f8f6;
+    border: 1px solid var(--border-soft, #e5ebe7);
+    border-radius: 10px;
+}
+
+.aped-staff-form-page .staff-account-status .form-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.aped-staff-form-page .staff-account-status .form-check-input {
+    float: none;
+    flex-shrink: 0;
+    margin: 3px 0 0;
+}
+
+.aped-staff-form-page .staff-account-status .form-check-label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    color: var(--text-main, #18332b);
+    font-size: 0.84rem;
+}
+
+.aped-staff-form-page .staff-account-status .form-check-label span {
+    color: var(--text-muted, #718078);
+    font-size: 0.77rem;
+}
+
+/* Form actions */
+.aped-staff-form-page .staff-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 23px;
+    margin-top: 25px;
+    border-top: 1px solid var(--border-soft, #e5ebe7);
+}
+
+.aped-staff-form-page .staff-form-actions .btn {
+    min-height: 41px;
+    padding: 9px 17px;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.aped-staff-form-page .staff-form-footer {
+    color: var(--text-muted, #718078);
+    font-size: 0.77rem;
+    margin-top: 15px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .aped-staff-form-page .staff-form-header {
+        align-items: flex-start;
+    }
+
+    .aped-staff-form-page .staff-header-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+    }
+
+    .aped-staff-form-page .staff-form-panel {
+        padding: 19px;
+    }
+
+    .aped-staff-form-page .staff-fields-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .aped-staff-form-page .staff-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .aped-staff-form-page .staff-form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
 {% endblock %}

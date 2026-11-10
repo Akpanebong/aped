@@ -6,6 +6,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.mail import send_mail
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -39,8 +40,28 @@ Please keep these credentials private and change the temporary password immediat
 
 
 @staff_admin_required
+@login_required
 def staff_list(request):
-    return render(request, "account/staff_list.html", {"staff_members": CustomUser.objects.order_by("last_name", "first_name", "username")})
+    staff_members = CustomUser.objects.all().order_by(
+        "last_name",
+        "first_name",
+        "username",
+    )
+
+    summary = staff_members.aggregate(
+        total=Count("pk"),
+        active=Count("pk", filter=Q(is_active=True)),
+        inactive=Count("pk", filter=Q(is_active=False)),
+    )
+
+    context = {
+        "staff_members": staff_members,
+        "total_count": summary["total"],
+        "active_count": summary["active"],
+        "inactive_count": summary["inactive"],
+    }
+
+    return render(request, "account/staff_list.html", context)
 
 
 @staff_admin_required

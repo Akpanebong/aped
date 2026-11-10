@@ -1,3 +1,270 @@
 {% extends 'base.html' %}
+
 {% block title %}{{ page_title }} · APED{% endblock %}
-{% block content %}<div class="form-narrow"><a href="{% url 'my_profile' %}">← My profile</a><h1 class="page-title mt-3">{{ page_title }}</h1><form method="post" class="panel p-4 mt-3">{% csrf_token %}{% for field in form %}<div class="mb-3"><label class="form-label">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="small text-danger">{{ error }}</div>{% endfor %}</div>{% endfor %}<button class="btn btn-primary">Save profile</button></form></div>{% endblock %}
+
+{% block body_class %}aped-profile-form-page{% endblock %}
+
+{% block content %}
+<div class="profile-form-wrapper">
+
+    <!-- Page navigation -->
+    <div class="mb-4">
+        <a href="{% url 'my_profile' %}" class="back-link">
+            <i class="bi bi-arrow-left"></i>
+            Back to my profile
+        </a>
+    </div>
+
+    <!-- Page heading -->
+    <div class="page-heading mb-4">
+        <div class="eyebrow">ACCOUNT SETTINGS</div>
+        <h1 class="page-title">{{ page_title }}</h1>
+        <p class="text-muted mb-0">
+            Update your personal and contact information.
+            Keep your details accurate and up to date.
+        </p>
+    </div>
+
+    <!-- Profile form -->
+    <div class="panel profile-form-panel">
+
+        <div class="panel-heading">
+            <div class="panel-icon">
+                <i class="bi bi-person-gear"></i>
+            </div>
+            <div>
+                <h5 class="mb-1">Personal information</h5>
+                <p class="text-muted small mb-0">
+                    Complete the fields below and save your changes.
+                </p>
+            </div>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+
+            <div class="row g-3">
+                {% for field in form %}
+                    {% if field.is_hidden %}
+                        {# Hidden fields are rendered above. #}
+                    {% else %}
+                        <div class="{% if field.field.widget.input_type == 'textarea' %}col-12{% else %}col-12{% endif %}">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <div class="form-text">
+                                    {{ field.help_text }}
+                                </div>
+                            {% endif %}
+
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <div class="form-actions mt-4 pt-3">
+                <a href="{% url 'my_profile' %}" class="btn btn-light border">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-circle me-1"></i>
+                    Save changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="profile-security-note mt-3">
+        <i class="bi bi-shield-check"></i>
+        <span>
+            Your profile information is managed securely within the APED system.
+        </span>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .aped-profile-form-page .profile-form-wrapper {
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto;
+        padding-bottom: 2rem;
+    }
+
+    .aped-profile-form-page .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--forest, #176b50);
+        font-size: .9rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .aped-profile-form-page .back-link:hover {
+        text-decoration: underline;
+    }
+
+    .aped-profile-form-page .eyebrow {
+        color: var(--forest, #176b50);
+        font-size: .7rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        margin-bottom: .45rem;
+    }
+
+    .aped-profile-form-page .page-title {
+        font-size: clamp(1.65rem, 4vw, 2.1rem);
+        font-weight: 750;
+        letter-spacing: -.04em;
+        margin-bottom: .45rem;
+    }
+
+    .aped-profile-form-page .profile-form-panel {
+        background: var(--surface, #fff);
+        border: 1px solid var(--border-soft, #e5e9e7);
+        border-radius: 16px;
+        padding: clamp(1.1rem, 3vw, 1.75rem);
+        box-shadow: 0 5px 20px rgba(20, 45, 35, .045);
+    }
+
+    .aped-profile-form-page .panel-heading {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding-bottom: 1.2rem;
+        margin-bottom: 1.4rem;
+        border-bottom: 1px solid var(--border-soft, #e5e9e7);
+    }
+
+    .aped-profile-form-page .panel-icon {
+        width: 43px;
+        height: 43px;
+        flex: 0 0 43px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: rgba(23, 107, 80, .09);
+        color: var(--forest, #176b50);
+        font-size: 1.2rem;
+    }
+
+    .aped-profile-form-page .panel-heading h5 {
+        font-weight: 700;
+    }
+
+    .aped-profile-form-page .form-label {
+        font-size: .88rem;
+        font-weight: 650;
+        color: var(--text-main, #26352e);
+        margin-bottom: .45rem;
+    }
+
+    .aped-profile-form-page input:not([type="checkbox"]):not([type="radio"]),
+    .aped-profile-form-page select,
+    .aped-profile-form-page textarea {
+        display: block;
+        width: 100%;
+        min-height: 44px;
+        padding: .65rem .8rem;
+        border: 1px solid var(--border-soft, #dce3df);
+        border-radius: 9px;
+        background-color: var(--surface, #fff);
+        color: var(--text-main, #26352e);
+        font-size: .9rem;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .aped-profile-form-page textarea {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .aped-profile-form-page input:focus,
+    .aped-profile-form-page select:focus,
+    .aped-profile-form-page textarea:focus {
+        outline: none;
+        border-color: var(--forest, #176b50);
+        box-shadow: 0 0 0 3px rgba(23, 107, 80, .10);
+    }
+
+    .aped-profile-form-page input[type="checkbox"],
+    .aped-profile-form-page input[type="radio"] {
+        accent-color: var(--forest, #176b50);
+    }
+
+    .aped-profile-form-page .form-text {
+        color: var(--text-muted, #748078);
+        font-size: .78rem;
+        margin-top: .4rem;
+    }
+
+    .aped-profile-form-page .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: .65rem;
+        border-top: 1px solid var(--border-soft, #e5e9e7);
+    }
+
+    .aped-profile-form-page .form-actions .btn {
+        min-height: 42px;
+        padding: .6rem 1.1rem;
+        border-radius: 9px;
+        font-size: .88rem;
+        font-weight: 650;
+    }
+
+    .aped-profile-form-page .profile-security-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        color: var(--text-muted, #748078);
+        font-size: .8rem;
+        line-height: 1.6;
+    }
+
+    .aped-profile-form-page .profile-security-note i {
+        color: var(--forest, #176b50);
+        font-size: 1rem;
+        margin-top: 1px;
+    }
+
+    @media (max-width: 576px) {
+        .aped-profile-form-page .form-actions {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+
+        .aped-profile-form-page .form-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
