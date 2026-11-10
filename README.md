@@ -28,7 +28,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 Visit http://127.0.0.1:8000/ and sign in. The first user can be created with `createsuperuser`.
-Copy `.env.example` to `.env` for local configuration. SQLite is used by default for development; production should set `DATABASE_URL` to PostgreSQL, `DJANGO_DEBUG=False`, a strong `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, and `DJANGO_CSRF_TRUSTED_ORIGINS`.
+Copy `.env.example` to `.env` for local configuration. SQLite is used by default for development; production should set `DATABASE_URL` to PostgreSQL, `DJANGO_DEBUG=False`, a strong `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, and `DJANGO_CSRF_TRUSTED_ORIGINS`. The default deployment host is `aped.pythonanywhere.com`; replace it if deploying under another domain.
 
 For a production web process, use `gunicorn aped_config.wsgi:application` (also provided in `Procfile`). Run `python manage.py collectstatic --noinput` during deployment, and run migrations before serving traffic.
 
