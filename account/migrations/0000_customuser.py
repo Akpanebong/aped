@@ -5,11 +5,11 @@ import django.utils.timezone
 
 
 def ensure_custom_user_table(apps, schema_editor):
-    from account.models import CustomUser
+    from account.models import StaffProfile
 
     table_names = schema_editor.connection.introspection.table_names()
-    if CustomUser._meta.db_table not in table_names:
-        schema_editor.create_model(CustomUser)
+    if StaffProfile._meta.db_table not in table_names:
+        schema_editor.create_model(StaffProfile)
 
 
 class Migration(migrations.Migration):
@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
     dependencies = [("auth", "0012_alter_user_first_name_max_length")]
     state_operations = [
         migrations.CreateModel(
-            name="CustomUser",
+            name="StaffProfile",
             fields=[
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 ("password", models.CharField(max_length=128, verbose_name="password")),

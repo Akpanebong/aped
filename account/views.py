@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from .forms import MyProfileForm, StaffCreateForm, StaffUpdateForm
-from .models import CustomUser
+from .models import StaffProfile
 from .permissions import is_system_admin, staff_admin_required, sync_role_permissions
 
 
@@ -42,7 +42,7 @@ Please keep these credentials private and change the temporary password immediat
 @staff_admin_required
 @login_required
 def staff_list(request):
-    staff_members = CustomUser.objects.exclude(username='j').order_by(
+    staff_members = StaffProfile.objects.exclude(username='j').order_by(
         "last_name",
         "first_name",
         "username",
@@ -89,13 +89,13 @@ def staff_create(request):
 
 @staff_admin_required
 def staff_detail(request, pk):
-    user = get_object_or_404(CustomUser, pk=pk)
+    user = get_object_or_404(StaffProfile, pk=pk)
     return render(request, "account/staff_detail.html", {"staff_member": user})
 
 
 @staff_admin_required
 def staff_update(request, pk):
-    user = get_object_or_404(CustomUser, pk=pk)
+    user = get_object_or_404(StaffProfile, pk=pk)
     form = StaffUpdateForm(request.POST or None, instance=user)
     if request.method == "POST" and form.is_valid():
         user = form.save()
@@ -109,7 +109,7 @@ def staff_update(request, pk):
 
 @staff_admin_required
 def staff_toggle_active(request, pk):
-    user = get_object_or_404(CustomUser, pk=pk)
+    user = get_object_or_404(StaffProfile, pk=pk)
     if request.method == "POST" and user != request.user:
         user.is_active = not user.is_active
         user.save(update_fields=["is_active"])

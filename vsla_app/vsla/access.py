@@ -3,17 +3,17 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
 from account.permissions import can_write
-from account.models import CustomUser
+from account.models import StaffProfile
 
 
 def can_access_vsla(user):
     if not user.is_authenticated or not getattr(user, "is_active", True):
         return False
     return user.role in {
-        CustomUser.Role.SYSTEM_ADMIN,
-        CustomUser.Role.PROGRAMME_MANAGER,
-        CustomUser.Role.DATA_ENTRY,
-        CustomUser.Role.READ_ONLY,
+        StaffProfile.Role.SYSTEM_ADMIN,
+        StaffProfile.Role.PROGRAMME_MANAGER,
+        StaffProfile.Role.DATA_ENTRY,
+        StaffProfile.Role.READ_ONLY,
     }
 
 

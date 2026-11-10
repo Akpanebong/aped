@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 
-from .models import CustomUser
+from .models import StaffProfile
 
 
 def profile_for(user):
@@ -16,7 +16,7 @@ def profile_for(user):
 
 def sync_role_permissions(user):
     """Keep Django admin access aligned with the APED role on the profile."""
-    if user.role == CustomUser.Role.SYSTEM_ADMIN or user.is_superuser:
+    if user.role == StaffProfile.Role.SYSTEM_ADMIN or user.is_superuser:
         group, _ = Group.objects.get_or_create(name="System Administrators")
         if not group.permissions.exists():
             group.permissions.set(Permission.objects.all())
@@ -31,11 +31,11 @@ def sync_role_permissions(user):
 
 
 def is_system_admin(user):
-    return bool(user.is_authenticated and (user.is_superuser or profile_for(user).role == CustomUser.Role.SYSTEM_ADMIN))
+    return bool(user.is_authenticated and (user.is_superuser or profile_for(user).role == StaffProfile.Role.SYSTEM_ADMIN))
 
 
 def can_write(user):
-    return bool(user.is_authenticated and (is_system_admin(user) or profile_for(user).role != CustomUser.Role.READ_ONLY))
+    return bool(user.is_authenticated and (is_system_admin(user) or profile_for(user).role != StaffProfile.Role.READ_ONLY))
 
 
 def can_delete(user):
@@ -57,19 +57,19 @@ def role_required(*allowed_roles):
 
 
 def create_required(view):
-    return role_required(CustomUser.Role.SYSTEM_ADMIN, CustomUser.Role.PROGRAMME_MANAGER, CustomUser.Role.DATA_ENTRY)(view)
+    return role_required(StaffProfile.Role.SYSTEM_ADMIN, StaffProfile.Role.PROGRAMME_MANAGER, StaffProfile.Role.DATA_ENTRY)(view)
 
 
 def edit_required(view):
-    return role_required(CustomUser.Role.SYSTEM_ADMIN, CustomUser.Role.PROGRAMME_MANAGER)(view)
+    return role_required(StaffProfile.Role.SYSTEM_ADMIN, StaffProfile.Role.PROGRAMME_MANAGER)(view)
 
 
 def approval_required(view):
-    return role_required(CustomUser.Role.SYSTEM_ADMIN, CustomUser.Role.PROGRAMME_MANAGER)(view)
+    return role_required(StaffProfile.Role.SYSTEM_ADMIN, StaffProfile.Role.PROGRAMME_MANAGER)(view)
 
 
 def system_admin_required(view):
-    return role_required(CustomUser.Role.SYSTEM_ADMIN)(view)
+    return role_required(StaffProfile.Role.SYSTEM_ADMIN)(view)
 
 
 def staff_admin_required(view):

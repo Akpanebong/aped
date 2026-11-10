@@ -36,7 +36,7 @@ The form seeder accepts a workbook path: `python manage.py seed_monitoring_forms
 
 Staff accounts receive an immutable ID in the format `APED-YY-0001`. On creation, the system generates the initial username (equal to the staff ID) and a temporary password, then emails both to the staff member. Staff can later change their username and password; the staff ID remains unchanged. Login accepts username, staff ID, email or phone. Configure SMTP in `.env` for onboarding and password-reset emails.
 
-Authentication uses `account.CustomUser` as `AUTH_USER_MODEL`; this single `AbstractUser` model is also the staff profile and stores the staff ID, role, contact and placement fields. There is no separate staff-profile table. On an existing installation that was migrated before this change, run `python manage.py repair_custom_user_migration` once, then `python manage.py migrate`. Fresh installations only need `python manage.py migrate`.
+Authentication uses `account.StaffProfile` as `AUTH_USER_MODEL`; this single `AbstractUser` model is also the staff profile and stores the staff ID, role, contact and placement fields. There is no separate staff-profile table. On an existing installation that was migrated before this change, run `python manage.py repair_custom_user_migration` once, then `python manage.py migrate`. Fresh installations only need `python manage.py migrate`.
 
 ## Security and deployment notes
 - Login is required to view operational data.

@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
             name='CustomUserGroup',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user', models.ForeignKey(db_column='user_id', on_delete=django.db.models.deletion.CASCADE, to='account.customuser')),
+                ('user', models.ForeignKey(db_column='user_id', on_delete=django.db.models.deletion.CASCADE, to='account.staffprofile')),
                 ('group', models.ForeignKey(db_column='group_id', on_delete=django.db.models.deletion.CASCADE, to='auth.group')),
             ],
             options={
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
             name='CustomUserPermission',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('user', models.ForeignKey(db_column='user_id', on_delete=django.db.models.deletion.CASCADE, to='account.customuser')),
+                ('user', models.ForeignKey(db_column='user_id', on_delete=django.db.models.deletion.CASCADE, to='account.staffprofile')),
                 ('permission', models.ForeignKey(db_column='permission_id', on_delete=django.db.models.deletion.CASCADE, to='auth.permission')),
             ],
             options={
@@ -52,12 +52,12 @@ class Migration(migrations.Migration):
             database_operations=[],
             state_operations=[
                 migrations.AlterField(
-                    model_name='customuser',
+                    model_name='staffprofile',
                     name='groups',
                     field=models.ManyToManyField(blank=True, related_name='custom_users', related_query_name='custom_user', through='account.CustomUserGroup', to='auth.group', verbose_name='groups'),
                 ),
                 migrations.AlterField(
-                    model_name='customuser',
+                    model_name='staffprofile',
                     name='user_permissions',
                     field=models.ManyToManyField(blank=True, related_name='custom_users', related_query_name='custom_user', through='account.CustomUserPermission', to='auth.permission', verbose_name='user permissions'),
                 ),

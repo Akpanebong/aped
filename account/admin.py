@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .forms import AdminUserChangeForm
-from .models import CustomUser
+from .models import StaffProfile
 
 
-@admin.register(CustomUser)
+@admin.register(StaffProfile)
 class StaffUserAdmin(UserAdmin):
     form = AdminUserChangeForm
     fieldsets = (

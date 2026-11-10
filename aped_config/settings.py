@@ -51,7 +51,7 @@ MIDDLEWARE = [
     "account.middleware.RoleEnforcementMiddleware",
 ]
 ROOT_URLCONF = "aped_config.urls"
-AUTH_USER_MODEL = "account.CustomUser"
+AUTH_USER_MODEL = "account.StaffProfile"
 AUTHENTICATION_BACKENDS = [
     "account.backends.StaffIdentifierBackend",
     "django.contrib.auth.backends.ModelBackend",

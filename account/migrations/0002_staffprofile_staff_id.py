@@ -3,7 +3,7 @@ from django.utils import timezone
 
 
 def populate_staff_ids(apps, schema_editor):
-    StaffProfile = apps.get_model("account", "StaffProfile")
+    StaffProfile = apps.get_model("account", "LegacyStaffProfile")
     year = timezone.localdate().strftime("%y")
     for profile in StaffProfile.objects.select_related("user").all():
         profile.staff_id = f"APED-{year}-{profile.user_id:04d}"

@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterModelOptions(
-            name='customuser',
+            name='staffprofile',
             options={'ordering': ['last_name', 'first_name', 'username']},
         ),
     ]
