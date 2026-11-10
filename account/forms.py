@@ -66,3 +66,4 @@ class AdminUserChangeForm(UserChangeForm):
     class Meta:
         model = StaffProfile
         fields = "__all__"
+
