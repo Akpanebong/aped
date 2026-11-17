@@ -11,8 +11,9 @@ from django.utils.text import slugify
 from openpyxl import Workbook
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
+from xml.sax.saxutils import escape
 from .models import MonitoringForm, MonitoringRecord, FollowUpAction
 from .forms import MonitoringFormDefinitionForm, MonitoringRecordForm, FollowUpActionForm
 from .linked_records import linked_record_choices as get_linked_record_choices
@@ -243,16 +244,18 @@ def collect_schema_data(request, monitoring_form):
                 row={}
                 for field in section.get('fields',[]):
                     key=f"{section_key}__row_{row_index}__{field['name']}"
-                    value=request.POST.get(key,'').strip()
-                    if value: row[field['label']]=value
+                    value = 'Yes' if field.get('type') == 'checkbox' and request.POST.get(key) else request.POST.get(key, '').strip()
+                    if field.get('type') == 'checkbox' or value:
+                        row[field['label'].lstrip('▢ ').strip()] = value or 'No'
                 if row: rows.append(row)
             if rows: data[section.get('title','Section')]=rows
         else:
             values={}
             for field in section.get('fields',[]):
                 key=f"{section_key}__{field['name']}"
-                value=request.POST.get(key,'').strip()
-                if value: values[field['label']]=value
+                value = 'Yes' if field.get('type') == 'checkbox' and request.POST.get(key) else request.POST.get(key, '').strip()
+                if field.get('type') == 'checkbox' or value:
+                    values[field['label'].lstrip('▢ ').strip()] = value or 'No'
             if values: data[section.get('title','Section')]=values
     return data
 
@@ -285,7 +288,8 @@ def prepared_field(field, values, section_key, row_index=None):
     if field.get('type') == 'linked_record':
         field['choices'] = get_linked_record_choices(field.get('linked_model'))
     suffix = f'__row_{row_index}__' if row_index is not None else '__'
-    field['value'] = values.get(field.get('label', ''), '')
+    label = field.get('label', '')
+    field['value'] = values.get(label, values.get(label.lstrip('▢ ').strip(), ''))
     field['input_name'] = f"{section_key}{suffix}{field['name']}"
     return field
 
@@ -385,20 +389,45 @@ def followup_delete(request,pk):
 @login_required
 def export_excel(request):
     records=filtered_records(request)
-    export_scope = 'filtered' if any(request.GET.get(key) for key in ('q', 'form', 'status', 'start', 'end', 'district')) else 'all'
+    export_scope = 'filtered' if export_filters_applied(request) else 'all'
+    records = list(records)
     wb=Workbook(); ws=wb.active; ws.title='Monitoring records'
-    ws.append(['Reference','Form','Visit date','Project','Location','District','Beneficiary / Group','Status','Officer','Observations','Structured data'])
+    core_headers=['Reference','Form','Visit date','Project','Location','District','Beneficiary / Group','Status','Officer','Observations']
+    dynamic_headers=[]
+    for record in records:
+        for section, field, _row, _value in structured_export_rows(record):
+            header=f'{section} / {field}'
+            if header not in dynamic_headers: dynamic_headers.append(header)
+    headers=core_headers + dynamic_headers
+    ws.append(headers)
     for r in records:
-        ws.append([r.reference,r.form.name,str(r.visit_date),r.project_name,r.location,r.district,r.group_or_beneficiary,r.status,str(r.created_by or ''),r.observations,json.dumps(r.data,ensure_ascii=False)])
+        values={}
+        for section, field, _row, value in structured_export_rows(r):
+            values.setdefault(f'{section} / {field}', []).append(value)
+        ws.append([
+            r.reference, r.form.name, str(r.visit_date), r.project.name if r.project else r.project_name,
+            r.location, r.district, r.group_or_beneficiary, r.get_status_display(), str(r.created_by or ''),
+            r.observations,
+        ] + ['; '.join(values.get(header, [])) for header in dynamic_headers])
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width=min(max(max(len(str(c.value or '')) for c in col)+2,14),45)
+    ws.freeze_panes='A2'; ws.auto_filter.ref=ws.dimensions
+
+    detail_ws=wb.create_sheet('Field data')
+    detail_ws.append(['Reference','Form','Section','Row','Field','Value'])
+    for r in records:
+        for section, field, row_number, value in structured_export_rows(r):
+            detail_ws.append([r.reference, r.form.name, section, row_number, field, value])
+    for col in detail_ws.columns:
+        detail_ws.column_dimensions[col[0].column_letter].width=min(max(max(len(str(c.value or '')) for c in col)+2,14),55)
+    detail_ws.freeze_panes='A2'; detail_ws.auto_filter.ref=detail_ws.dimensions
     response=HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition']=f'attachment; filename="aped-monitoring-records-{export_scope}.xlsx"'; wb.save(response); return response
 
 @login_required
 def export_pdf(request):
     records=filtered_records(request)
-    export_scope = 'filtered' if any(request.GET.get(key) for key in ('q', 'form', 'status', 'start', 'end', 'district')) else 'all'
+    export_scope = 'filtered' if export_filters_applied(request) else 'all'
     response=HttpResponse(content_type='application/pdf'); response['Content-Disposition']=f'attachment; filename="aped-monitoring-records-{export_scope}.pdf"'
     doc=SimpleDocTemplate(response,pagesize=landscape(A4),rightMargin=24,leftMargin=24,topMargin=28,bottomMargin=24)
     styles=getSampleStyleSheet()
@@ -407,17 +436,76 @@ def export_pdf(request):
     header_style=cell_style.clone('MonitoringRecordHeader')
     header_style.fontName='Helvetica-Bold'; header_style.textColor=colors.white
     story=[Paragraph('APED Monitoring Records',styles['Title']),Spacer(1,12)]
-    data=[[Paragraph(value,header_style) for value in ['Reference','Monitoring tool','Visit date','Location','District','Group / beneficiary','Status']]]
-    for r in records:
-        data.append([Paragraph(str(value or ''),cell_style) for value in [
-            r.reference,r.form.name,str(r.visit_date),r.location,r.district,r.group_or_beneficiary,r.status
-        ]])
-    table=Table(data,repeatRows=1,colWidths=[75,135,65,100,80,155,55])
-    table.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.HexColor('#163b32')),('TEXTCOLOR',(0,0),(-1,0),colors.white),('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),('FONTSIZE',(0,0),(-1,-1),7),('GRID',(0,0),(-1,-1),.35,colors.HexColor('#d7dfdb')),('VALIGN',(0,0),(-1,-1),'TOP'),('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.white,colors.HexColor('#f2f6f3')]),('LEFTPADDING',(0,0),(-1,-1),5),('RIGHTPADDING',(0,0),(-1,-1),5)]))
-    story.append(table); doc.build(story); return response
+    records = list(records)
+    for index, r in enumerate(records):
+        story.append(Paragraph(escape(f'{r.reference} — {r.form.name}'), styles['Heading2']))
+        metadata=[
+            ['Visit date', str(r.visit_date or ''), 'Status', r.get_status_display()],
+            ['Project', r.project.name if r.project else r.project_name, 'Officer', str(r.created_by or '')],
+            ['Location', r.location, 'District', r.district],
+            ['Group / beneficiary', r.group_or_beneficiary, 'Observations', r.observations],
+        ]
+        metadata_table=Table([[Paragraph(escape(str(v or '')), header_style if i % 2 == 0 else cell_style) for i,v in enumerate(row)] for row in metadata], colWidths=[75,195,75,195])
+        metadata_table.setStyle(TableStyle([('BACKGROUND',(0,0),(0,-1),colors.HexColor('#163b32')),('BACKGROUND',(2,0),(2,-1),colors.HexColor('#163b32')),('TEXTCOLOR',(0,0),(0,-1),colors.white),('TEXTCOLOR',(2,0),(2,-1),colors.white),('GRID',(0,0),(-1,-1),.35,colors.HexColor('#d7dfdb')),('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),5),('RIGHTPADDING',(0,0),(-1,-1),5)]))
+        story.extend([metadata_table, Spacer(1,8)])
+        field_rows=[[Paragraph('Section',header_style), Paragraph('Row',header_style), Paragraph('Field',header_style), Paragraph('Value',header_style)]]
+        field_rows.extend([[Paragraph(escape(str(section)),cell_style), Paragraph(escape(str(row_number)),cell_style), Paragraph(escape(str(field)),cell_style), Paragraph(escape(str(value or '')),cell_style)] for section, field, row_number, value in structured_export_rows(r)])
+        if len(field_rows) == 1:
+            field_rows.append([Paragraph('No structured fields captured.', cell_style), '', '', ''])
+        field_table=Table(field_rows, repeatRows=1, colWidths=[170,35,150,185])
+        field_table.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.HexColor('#163b32')),('TEXTCOLOR',(0,0),(-1,0),colors.white),('GRID',(0,0),(-1,-1),.35,colors.HexColor('#d7dfdb')),('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.white,colors.HexColor('#f2f6f3')]),('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),5),('RIGHTPADDING',(0,0),(-1,-1),5)]))
+        story.append(field_table)
+        if index < len(records)-1: story.append(PageBreak())
+    if not records: story.append(Paragraph('No monitoring records matched the selected filters.', cell_style))
+    doc.build(story); return response
+
+
+def structured_export_rows(record):
+    """Return every schema field and captured value in export-friendly rows."""
+    rows=[]
+    saved=record.data or {}
+    known_sections=set()
+    for section in record.form.schema or []:
+        title=section.get('title','Section')
+        known_sections.add(title)
+        values=saved.get(title, [] if section.get('repeatable') else {})
+        section_rows=values if isinstance(values, list) else [values]
+        if not section.get('repeatable'): section_rows=section_rows[:1]
+        for row_number, value_map in enumerate(section_rows, 1):
+            value_map=value_map if isinstance(value_map, dict) else {}
+            schema_labels=set()
+            for field in section.get('fields', []):
+                label=field.get('label','')
+                value=value_map.get(label, value_map.get(label.lstrip('▢ ').strip(), ''))
+                if value not in ('', None, []):
+                    rows.append((title, label.lstrip('▢ ').strip(), row_number, export_value(value)))
+                schema_labels.update((label, label.lstrip('▢ ').strip()))
+            for label, value in value_map.items():
+                if label not in schema_labels and value not in ('', None, []):
+                    rows.append((title, str(label).lstrip('▢ ').strip(), row_number, export_value(value)))
+    # Preserve data written by older/custom schemas even if the schema changed later.
+    for title, section_data in saved.items():
+        if title in known_sections or not isinstance(section_data, dict): continue
+        for label, value in section_data.items():
+            if value not in ('', None, []): rows.append((title, str(label).lstrip('▢ ').strip(), 1, export_value(value)))
+    return rows
+
+
+def export_value(value):
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False)
+    return str(value)
+
+
+EXPORT_FILTER_KEYS = ('q', 'form', 'status', 'start', 'end', 'district')
+
+
+def export_filters_applied(request):
+    """Treat blank query-string controls as unfiltered exports."""
+    return any(request.GET.get(key, '').strip() for key in EXPORT_FILTER_KEYS)
 
 def filtered_records(request):
-    records=MonitoringRecord.objects.select_related('form','created_by')
+    records=MonitoringRecord.objects.select_related('form','created_by','project')
     q=request.GET.get('q','').strip(); form_id=request.GET.get('form',''); status=request.GET.get('status','')
     start=request.GET.get('start',''); end=request.GET.get('end',''); district=request.GET.get('district','')
     if q: records=records.filter(Q(reference__icontains=q)|Q(location__icontains=q)|Q(group_or_beneficiary__icontains=q)|Q(project_name__icontains=q))

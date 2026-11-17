@@ -30,13 +30,13 @@
         <div class="records-header-actions">
 
             <a class="btn btn-outline-primary"
-               href="{% url 'export_excel' %}?{{ request.GET.urlencode }}">
+               href="{% url 'export_excel' %}{% if filters.q or filters.form or filters.status or filters.start or filters.end or filters.district %}?{{ request.GET.urlencode }}{% endif %}">
                 <i class="bi bi-file-earmark-excel me-1"></i>
                 Export Excel
             </a>
 
             <a class="btn btn-outline-primary"
-               href="{% url 'export_pdf' %}?{{ request.GET.urlencode }}">
+               href="{% url 'export_pdf' %}{% if filters.q or filters.form or filters.status or filters.start or filters.end or filters.district %}?{{ request.GET.urlencode }}{% endif %}">
                 <i class="bi bi-file-earmark-pdf me-1"></i>
                 Export PDF
             </a>

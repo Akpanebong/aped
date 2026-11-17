@@ -32,10 +32,10 @@ class Command(BaseCommand):
             self.stdout.write(f"{'Created' if created else 'Updated'} {name}")
 
     def parse_sheet(self, worksheet):
-        rows = [[str(value).strip() if value is not None else "" for value in row] for row in worksheet.iter_rows(values_only=True)]
+        rows = [[value if isinstance(value, bool) else (str(value).strip() if value is not None else "") for value in row] for row in worksheet.iter_rows(values_only=True)]
         if worksheet.title == "Field Visit Attendance Sheet":
             return [self.make_section("Activity Details", ["Activity", "Village", "Date", "Facilitator", "Project"], False, 1), self.make_section("Participant Attendance", ["Participant Name", "Gender", "Age", "Age Group (18-35/35+)", "Disability Status?", "Disability Type", "Contact", "Signature/Attendance Confirmation", "Notes"], True, 2)]
-        starts = [index for index, row in enumerate(rows) if row and row[0].lower().startswith("section")]
+        starts = [index for index, row in enumerate(rows) if row and isinstance(row[0], str) and row[0].lower().startswith("section")]
         schema = []
         for position, start in enumerate(starts):
             end = starts[position + 1] if position + 1 < len(starts) else len(rows)
@@ -44,28 +44,56 @@ class Command(BaseCommand):
                 continue
             header = content[0]
             if header[0].lower() in {"field", "aspect", "topic"}:
-                labels, repeatable = [row[0] for row in content[1:] if row[0]], False
+                labels, repeatable = [], False
+                for row in content[1:]:
+                    cells = [value for value in row if value not in (None, "")]
+                    checkbox_cells = [value for value in cells if isinstance(value, str) and value.lstrip().startswith("▢")]
+                    # Some workbook checkbox rows are stored as FALSE in column A,
+                    # with the visible label in column B.
+                    if checkbox_cells or (row and row[0] is False):
+                        if checkbox_cells:
+                            labels.extend(checkbox_cells)
+                        elif len(cells) > 1:
+                            labels.append(f"▢ {cells[1]}")
+                    elif row and row[0]:
+                        labels.append(row[0])
             else:
                 first = header[0] if header[0] and header[0] != "#" else ""
                 labels, repeatable = ([first] if first else []) + [value for value in header[1:] if value], True
             if labels:
                 schema.append(self.make_section(rows[start][0], labels, repeatable, len(schema) + 1))
+        if worksheet.title == "Peacebuilding Forms Package" and schema:
+            schema[0]["fields"].insert(0, {
+                "name": "intervention_type",
+                "label": "Intervention Type",
+                "type": "select",
+                "choices": ["Mediation", "Peace Circle", "Dialogue", "Reconciliation", "Peacebuilding", "MDD", "Training"],
+            })
         return schema
 
     def make_section(self, title, labels, repeatable, number):
-        return {"title": title, "key": f"section_{number}", "repeatable": repeatable, "fields": [{"name": f"field_{index}", "label": label, "type": self.field_type(label), "choices": self.field_choices(label)} for index, label in enumerate(labels, 1)]}
+        return {"title": title, "key": f"section_{number}", "repeatable": repeatable, "fields": [{"name": f"field_{index}", "label": label.lstrip("▢ ").strip(), "type": self.field_type(label), "choices": self.field_choices(label)} for index, label in enumerate(labels, 1)]}
 
     def field_type(self, label):
         value = label.lower()
+        if label.lstrip().startswith("▢"):
+            return "select"
         if "signature" in value or "phone" in value or re.search(r"\bid\b", value): return "text"
-        if any(token in value for token in ["number", "amount", "quantity", "weight", "rate", "distance", "participants", "members", "shares", "interest", "sessions", "kids", "people affected"]): return "number"
         if "date" in value or "dates" in value: return "date"
+        if any(token in value for token in ["number", "amount", "quantity", "weight", "rate", "distance", "participants", "members", "shares", "interest", "sessions", "kids", "people affected"]): return "number"
         if "?" in value or any(token in value for token in ["yes/no", "y/n", "gender", "condition", "rating", "status"]): return "select"
         if any(token in value for token in ["comments", "description", "notes", "summary", "symptoms", "observations", "recommendations", "challenges", "feedback", "purpose", "actions", "remarks", "outcome"]): return "textarea"
         return "text"
 
     def field_choices(self, label):
         value = label.lower()
+        if label.lstrip().startswith("▢"): return ["Yes", "No"]
+        if value == "intervention type": return ["Mediation", "Peace Circle", "Dialogue", "Reconciliation", "Peacebuilding", "MDD", "Training"]
+        match = re.search(r"\(([^)]+)\)", label)
+        if match and any(separator in match.group(1) for separator in ("/", ",", "|")):
+            return [choice.strip() for choice in re.split(r"[/,|]", match.group(1)) if choice.strip()]
+        if "weather" in value: return ["Sunny", "Cloudy", "Rainy", "Other"]
+        if "condition" in value: return ["Good", "Fair", "Poor", "Other"]
         if "gender" in value: return ["Male", "Female", "Other", "Prefer not to say"]
         if "age group" in value: return ["18-35", "35+"]
         if "yes/no" in value or "y/n" in value or "?" in value: return ["Yes", "No", "Not applicable"]
