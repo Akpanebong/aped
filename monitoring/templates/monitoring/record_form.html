@@ -2,7 +2,7 @@
 {% block title %}{{ page_title }} · APED{% endblock %}
 {% block content %}
 <div class="form-hero mb-4"><a href="{% url 'record_list' %}" class="small text-decoration-none">← Back to records</a><div class="eyebrow mt-3">FIELD DATA COLLECTION</div><h1 class="page-title">{{ page_title }}</h1><p class="text-muted mb-0">Use the workbook structure below. Complete only the sections relevant to this visit.</p></div>
-<form method="post" class="record-form" id="monitoring-form">
+<form method="post" enctype="multipart/form-data" class="record-form" id="monitoring-form">
 {% csrf_token %}
 {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
 <section class="panel mb-4"><div class="panel-heading"><div><h2>Record setup</h2><p>Core fields used for search, reporting and follow-up</p></div><span class="step-number">01</span></div><div class="row g-3 p-3">

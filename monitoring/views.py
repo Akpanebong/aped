@@ -1,4 +1,5 @@
 import csv, json
+import uuid
 from datetime import date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -7,6 +8,8 @@ from django.db.models import Q, Count, Sum
 from django.db.models.deletion import ProtectedError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.core.files.storage import default_storage
+from django.utils.text import get_valid_filename
 from django.utils.text import slugify
 from openpyxl import Workbook
 from reportlab.lib import colors
@@ -168,7 +171,7 @@ def record_create(request):
     for key in ('form', 'activity', 'group_or_beneficiary', 'project_name', 'location', 'district'):
         if request.GET.get(key):
             initial[key] = request.GET[key]
-    form=MonitoringRecordForm(request.POST or None, initial=initial)
+    form=MonitoringRecordForm(request.POST or None, request.FILES or None, initial=initial)
     selected_schema=[]
     if request.method=='POST':
         if form.is_valid():
@@ -197,14 +200,14 @@ def record_create(request):
 @login_required
 @edit_required
 def record_update(request,pk):
-    obj=get_object_or_404(MonitoringRecord,pk=pk); form=MonitoringRecordForm(request.POST or None,instance=obj)
+    obj=get_object_or_404(MonitoringRecord,pk=pk); form=MonitoringRecordForm(request.POST or None, request.FILES or None, instance=obj)
     schema=obj.form.schema
     if request.method=='POST' and form.is_valid():
         required_errors = required_schema_errors(request, form.cleaned_data['form'])
         if required_errors:
             form.add_error(None, 'Complete the required monitoring fields: ' + ', '.join(required_errors))
         else:
-            obj=form.save(commit=False); obj.updated_by=request.user; obj.data=collect_schema_data(request,obj.form)
+            obj=form.save(commit=False); obj.updated_by=request.user; obj.data=collect_schema_data(request,obj.form,obj.data)
             if obj.project:
                 obj.project_name = obj.project.name
             if obj.activity and not obj.project:
@@ -222,20 +225,27 @@ def required_schema_errors(request, monitoring_form):
         required_fields = [field for field in section.get('fields', []) if field.get('required')]
         if section.get('repeatable'):
             for row_index in range(100):
-                row_values = [request.POST.get(f"{section_key}__row_{row_index}__{field['name']}", '').strip() for field in section.get('fields', [])]
+                row_values = [schema_request_value(request, f"{section_key}__row_{row_index}__{field['name']}", field) for field in section.get('fields', [])]
                 if not any(row_values):
                     continue
                 for field in required_fields:
-                    if not request.POST.get(f"{section_key}__row_{row_index}__{field['name']}", '').strip():
+                    if not schema_request_value(request, f"{section_key}__row_{row_index}__{field['name']}", field):
                         errors.append(f"{section_title}: {field.get('label', field['name'])}")
         else:
             for field in required_fields:
-                if not request.POST.get(f"{section_key}__{field['name']}", '').strip():
+                if not schema_request_value(request, f"{section_key}__{field['name']}", field):
                     errors.append(f"{section_title}: {field.get('label', field['name'])}")
     return errors
 
-def collect_schema_data(request, monitoring_form):
+
+def schema_request_value(request, key, field):
+    if field.get('type') in ('file', 'image'):
+        return request.FILES.get(key)
+    return request.POST.get(key, '').strip()
+
+def collect_schema_data(request, monitoring_form, existing_data=None):
     data={}
+    existing_data=existing_data or {}
     for section_index, section in enumerate(monitoring_form.schema, 1):
         section_key=section.get('key',f'section_{section_index}')
         if section.get('repeatable'):
@@ -244,7 +254,7 @@ def collect_schema_data(request, monitoring_form):
                 row={}
                 for field in section.get('fields',[]):
                     key=f"{section_key}__row_{row_index}__{field['name']}"
-                    value = 'Yes' if field.get('type') == 'checkbox' and request.POST.get(key) else request.POST.get(key, '').strip()
+                    value = schema_value(request, key, field, existing_data.get(section.get('title','Section'), []), row_index)
                     if field.get('type') == 'checkbox' or value:
                         row[field['label'].lstrip('▢ ').strip()] = value or 'No'
                 if row: rows.append(row)
@@ -253,11 +263,31 @@ def collect_schema_data(request, monitoring_form):
             values={}
             for field in section.get('fields',[]):
                 key=f"{section_key}__{field['name']}"
-                value = 'Yes' if field.get('type') == 'checkbox' and request.POST.get(key) else request.POST.get(key, '').strip()
+                value = schema_value(request, key, field, existing_data.get(section.get('title','Section'), {}), None)
                 if field.get('type') == 'checkbox' or value:
                     values[field['label'].lstrip('▢ ').strip()] = value or 'No'
             if values: data[section.get('title','Section')]=values
     return data
+
+
+def schema_value(request, key, field, existing_section, row_index):
+    if field.get('type') in ('file', 'image'):
+        uploaded = request.FILES.get(key)
+        if uploaded:
+            if field.get('type') == 'image' and not (uploaded.content_type or '').startswith('image/'):
+                return ''
+            filename = get_valid_filename(uploaded.name)
+            path = default_storage.save(f'monitoring_uploads/{uuid.uuid4().hex}_{filename}', uploaded)
+            return {'name': uploaded.name, 'path': path, 'url': default_storage.url(path), 'size': uploaded.size, 'content_type': uploaded.content_type or ''}
+        if isinstance(existing_section, list) and row_index is not None and row_index < len(existing_section):
+            old_row = existing_section[row_index] if isinstance(existing_section[row_index], dict) else {}
+        else:
+            old_row = existing_section if isinstance(existing_section, dict) else {}
+        label = field.get('label', '')
+        return old_row.get(label, old_row.get(label.lstrip('▢ ').strip(), ''))
+    if field.get('type') == 'checkbox':
+        return 'Yes' if request.POST.get(key) else 'No'
+    return request.POST.get(key, '').strip()
 
 
 def prepare_schema(schema, saved_data=None):
@@ -290,6 +320,9 @@ def prepared_field(field, values, section_key, row_index=None):
     suffix = f'__row_{row_index}__' if row_index is not None else '__'
     label = field.get('label', '')
     field['value'] = values.get(label, values.get(label.lstrip('▢ ').strip(), ''))
+    if field.get('type') in ('file', 'image') and isinstance(field['value'], dict):
+        field['file_url'] = field['value'].get('url') or default_storage.url(field['value'].get('path', ''))
+        field['file_name'] = field['value'].get('name', 'Uploaded file')
     field['input_name'] = f"{section_key}{suffix}{field['name']}"
     return field
 
@@ -325,7 +358,10 @@ def record_detail(request,pk):
         structured_rows = []
         for row in rows:
             row = row if isinstance(row, dict) else {}
-            structured_rows.append([(field.get('label', ''), row.get(field.get('label', ''), '')) for field in section.get('fields', [])])
+            structured_rows.append([
+                (field.get('label', ''), display_structured_value(schema_field_value(row, field)))
+                for field in section.get('fields', [])
+            ])
         structured_sections.append({'id': f'monitoring-section-{index}', 'title': title, 'repeatable': section.get('repeatable', False), 'rows': structured_rows})
     section_links = []
     for index, section in enumerate(obj.form.schema or [], 1):
@@ -348,7 +384,7 @@ def record_section_update(request, pk, section_index):
         raise Http404('Monitoring section not found.')
     section = sections[section_index - 1]
     if request.method == 'POST':
-        section_data = collect_schema_data(request, type('SectionForm', (), {'schema': [section]}))
+        section_data = collect_schema_data(request, type('SectionForm', (), {'schema': [section]}), obj.data)
         obj.data = {**(obj.data or {}), **section_data}
         obj.updated_by = request.user
         obj.save(update_fields=['data', 'updated_by', 'updated_at'])
@@ -492,9 +528,22 @@ def structured_export_rows(record):
 
 
 def export_value(value):
+    if isinstance(value, dict) and value.get('url'):
+        return f"{value.get('name', 'Uploaded file')} ({value['url']})"
     if isinstance(value, (dict, list)):
         return json.dumps(value, ensure_ascii=False)
     return str(value)
+
+
+def display_structured_value(value):
+    if isinstance(value, dict) and value.get('url'):
+        return f"{value.get('name', 'Uploaded file')} ({value['url']})"
+    return value
+
+
+def schema_field_value(value_map, field):
+    label = field.get('label', '')
+    return value_map.get(label, value_map.get(label.lstrip('▢ ').strip(), ''))
 
 
 EXPORT_FILTER_KEYS = ('q', 'form', 'status', 'start', 'end', 'district')

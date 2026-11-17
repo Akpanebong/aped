@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { value: 'number', label: 'Number' },
         { value: 'date', label: 'Date' },
         { value: 'select', label: 'Dropdown' },
+        { value: 'file', label: 'File upload' },
+        { value: 'image', label: 'Image upload (signature)' },
         { value: 'linked_record', label: 'Linked record' }
     ];
 
