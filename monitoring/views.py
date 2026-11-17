@@ -1,5 +1,6 @@
 import csv, json
 import uuid
+from io import BytesIO
 from datetime import date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -12,9 +13,12 @@ from django.core.files.storage import default_storage
 from django.utils.text import get_valid_filename
 from django.utils.text import slugify
 from openpyxl import Workbook
+from openpyxl.drawing.image import Image as ExcelImage
+from openpyxl.styles import Alignment, Font, PatternFill
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image as PdfImage
+from reportlab.lib.utils import ImageReader
 from reportlab.lib.styles import getSampleStyleSheet
 from xml.sax.saxutils import escape
 from .models import MonitoringForm, MonitoringRecord, FollowUpAction
@@ -427,38 +431,83 @@ def export_excel(request):
     records=filtered_records(request)
     export_scope = 'filtered' if export_filters_applied(request) else 'all'
     records = list(records)
-    wb=Workbook(); ws=wb.active; ws.title='Monitoring records'
-    core_headers=['Reference','Form','Visit date','Project','Location','District','Beneficiary / Group','Status','Officer','Observations']
-    dynamic_headers=[]
+    wb=Workbook()
+    wb.remove(wb.active)
+    grouped={}
     for record in records:
-        for section, field, _row, _value in structured_export_rows(record):
-            header=f'{section} / {field}'
-            if header not in dynamic_headers: dynamic_headers.append(header)
-    headers=core_headers + dynamic_headers
-    ws.append(headers)
-    for r in records:
-        values={}
-        for section, field, _row, value in structured_export_rows(r):
-            values.setdefault(f'{section} / {field}', []).append(value)
-        ws.append([
-            r.reference, r.form.name, str(r.visit_date), r.project.name if r.project else r.project_name,
-            r.location, r.district, r.group_or_beneficiary, r.get_status_display(), str(r.created_by or ''),
-            r.observations,
-        ] + ['; '.join(values.get(header, [])) for header in dynamic_headers])
-    for col in ws.columns:
-        ws.column_dimensions[col[0].column_letter].width=min(max(max(len(str(c.value or '')) for c in col)+2,14),45)
-    ws.freeze_panes='A2'; ws.auto_filter.ref=ws.dimensions
-
-    detail_ws=wb.create_sheet('Field data')
-    detail_ws.append(['Reference','Form','Section','Row','Field','Value'])
-    for r in records:
-        for section, field, row_number, value in structured_export_rows(r):
-            detail_ws.append([r.reference, r.form.name, section, row_number, field, value])
-    for col in detail_ws.columns:
-        detail_ws.column_dimensions[col[0].column_letter].width=min(max(max(len(str(c.value or '')) for c in col)+2,14),55)
-    detail_ws.freeze_panes='A2'; detail_ws.auto_filter.ref=detail_ws.dimensions
+        grouped.setdefault(record.form.name, []).append(record)
+    if grouped:
+        for form_name, form_records in sorted(grouped.items()):
+            title=excel_sheet_title(form_name, {sheet.title for sheet in wb.worksheets})
+            write_monitoring_export_sheet(wb, title, form_records)
+    else:
+        wb.create_sheet('No records')
     response=HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition']=f'attachment; filename="aped-monitoring-records-{export_scope}.xlsx"'; wb.save(response); return response
+
+
+def excel_sheet_title(form_name, existing_titles):
+    title=form_name
+    for character in ['\\', '/', '*', '?', ':', '[', ']']:
+        title=title.replace(character, '-')
+    title=title.strip()[:31] or 'Monitoring form'
+    base=title; suffix=2
+    while title in existing_titles:
+        suffix_text=f' ({suffix})'
+        title=f'{base[:31-len(suffix_text)]}{suffix_text}'
+        suffix += 1
+    return title
+
+
+def write_monitoring_export_sheet(workbook, title, records):
+    ws=workbook.create_sheet(title)
+    ws.append(['Reference','Field','Row','Value'])
+    for cell in ws[1]:
+        cell.font=Font(bold=True, color='FFFFFF')
+        cell.fill=PatternFill('solid', fgColor='163B32')
+        cell.alignment=Alignment(horizontal='center')
+    for record in records:
+        ws.merge_cells(start_row=ws.max_row + 1, start_column=1, end_row=ws.max_row + 1, end_column=4)
+        record_header=ws.cell(ws.max_row, 1, f'Record: {record.reference}')
+        style_export_section_header(record_header)
+        ws.merge_cells(start_row=ws.max_row + 1, start_column=1, end_row=ws.max_row + 1, end_column=4)
+        section_header=ws.cell(ws.max_row, 1, 'Record setup')
+        style_export_section_header(section_header)
+        core_values=[
+            ('Reference', record.reference), ('Monitoring form', record.form.name), ('Visit date', record.visit_date),
+            ('Project', record.project.name if record.project else record.project_name), ('Location', record.location),
+            ('District', record.district), ('Beneficiary / Group', record.group_or_beneficiary),
+            ('Status', record.get_status_display()), ('Officer', str(record.created_by or '')), ('Observations', record.observations),
+        ]
+        for field, value in core_values:
+            ws.append([record.reference, field, 1, value or ''])
+        for section in record.form.schema or []:
+            title=section.get('title', 'Section')
+            section_entries=[entry for entry in structured_export_entries(record) if entry[0] == title]
+            ws.merge_cells(start_row=ws.max_row + 1, start_column=1, end_row=ws.max_row + 1, end_column=4)
+            section_header=ws.cell(ws.max_row, 1, title)
+            style_export_section_header(section_header)
+            if not section_entries:
+                ws.append([record.reference, 'No data captured', '', ''])
+                continue
+            for _section, field, row_number, value, raw_value in section_entries:
+                ws.append([record.reference, field, row_number, value])
+                if is_image_upload(raw_value):
+                    cell=ws.cell(ws.max_row, 4)
+                    image=excel_upload_image(raw_value)
+                    if image:
+                        image.anchor=cell.coordinate; image.width=min(image.width, 180); image.height=min(image.height, 70)
+                        ws.add_image(image); ws.row_dimensions[ws.max_row].height=max(ws.row_dimensions[ws.max_row].height or 15, 60)
+    for col in ws.columns:
+        ws.column_dimensions[col[0].column_letter].width=min(max(max(len(str(c.value or '')) for c in col)+2,14),55)
+    ws.column_dimensions['D'].width=45
+    ws.freeze_panes='A2'
+
+
+def style_export_section_header(cell):
+    cell.font=Font(bold=True, color='163B32')
+    cell.fill=PatternFill('solid', fgColor='E8F1EB')
+    cell.alignment=Alignment(horizontal='left')
 
 @login_required
 def export_pdf(request):
@@ -485,7 +534,7 @@ def export_pdf(request):
         metadata_table.setStyle(TableStyle([('BACKGROUND',(0,0),(0,-1),colors.HexColor('#163b32')),('BACKGROUND',(2,0),(2,-1),colors.HexColor('#163b32')),('TEXTCOLOR',(0,0),(0,-1),colors.white),('TEXTCOLOR',(2,0),(2,-1),colors.white),('GRID',(0,0),(-1,-1),.35,colors.HexColor('#d7dfdb')),('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),5),('RIGHTPADDING',(0,0),(-1,-1),5)]))
         story.extend([metadata_table, Spacer(1,8)])
         field_rows=[[Paragraph('Section',header_style), Paragraph('Row',header_style), Paragraph('Field',header_style), Paragraph('Value',header_style)]]
-        field_rows.extend([[Paragraph(escape(str(section)),cell_style), Paragraph(escape(str(row_number)),cell_style), Paragraph(escape(str(field)),cell_style), Paragraph(escape(str(value or '')),cell_style)] for section, field, row_number, value in structured_export_rows(r)])
+        field_rows.extend([[Paragraph(escape(str(section)),cell_style), Paragraph(escape(str(row_number)),cell_style), Paragraph(escape(str(field)),cell_style), pdf_field_value(raw_value, value, cell_style)] for section, field, row_number, value, raw_value in structured_export_entries(r)])
         if len(field_rows) == 1:
             field_rows.append([Paragraph('No structured fields captured.', cell_style), '', '', ''])
         field_table=Table(field_rows, repeatRows=1, colWidths=[170,35,150,185])
@@ -498,6 +547,11 @@ def export_pdf(request):
 
 def structured_export_rows(record):
     """Return every schema field and captured value in export-friendly rows."""
+    return [(section, field, row_number, value) for section, field, row_number, value, _raw in structured_export_entries(record)]
+
+
+def structured_export_entries(record):
+    """Return schema fields with both display and original values."""
     rows=[]
     saved=record.data or {}
     known_sections=set()
@@ -514,16 +568,16 @@ def structured_export_rows(record):
                 label=field.get('label','')
                 value=value_map.get(label, value_map.get(label.lstrip('▢ ').strip(), ''))
                 if value not in ('', None, []):
-                    rows.append((title, label.lstrip('▢ ').strip(), row_number, export_value(value)))
+                    rows.append((title, label.lstrip('▢ ').strip(), row_number, export_value(value), value))
                 schema_labels.update((label, label.lstrip('▢ ').strip()))
             for label, value in value_map.items():
                 if label not in schema_labels and value not in ('', None, []):
-                    rows.append((title, str(label).lstrip('▢ ').strip(), row_number, export_value(value)))
+                    rows.append((title, str(label).lstrip('▢ ').strip(), row_number, export_value(value), value))
     # Preserve data written by older/custom schemas even if the schema changed later.
     for title, section_data in saved.items():
         if title in known_sections or not isinstance(section_data, dict): continue
         for label, value in section_data.items():
-            if value not in ('', None, []): rows.append((title, str(label).lstrip('▢ ').strip(), 1, export_value(value)))
+            if value not in ('', None, []): rows.append((title, str(label).lstrip('▢ ').strip(), 1, export_value(value), value))
     return rows
 
 
@@ -533,6 +587,41 @@ def export_value(value):
     if isinstance(value, (dict, list)):
         return json.dumps(value, ensure_ascii=False)
     return str(value)
+
+
+def is_image_upload(value):
+    return isinstance(value, dict) and value.get('path') and (value.get('content_type', '').startswith('image/') or value.get('name', '').lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp')))
+
+
+def upload_bytes(value):
+    if not is_image_upload(value): return None
+    try:
+        with default_storage.open(value['path'], 'rb') as uploaded:
+            return uploaded.read()
+    except (FileNotFoundError, OSError):
+        return None
+
+
+def excel_upload_image(value):
+    content = upload_bytes(value)
+    if not content: return None
+    try:
+        return ExcelImage(BytesIO(content))
+    except (ValueError, OSError):
+        return None
+
+
+def pdf_field_value(raw_value, display_value, cell_style):
+    content = upload_bytes(raw_value)
+    if not content:
+        return Paragraph(escape(str(display_value or '')), cell_style)
+    try:
+        reader = ImageReader(BytesIO(content))
+        width, height = reader.getSize()
+        scale = min(120 / max(width, 1), 55 / max(height, 1), 1)
+        return PdfImage(BytesIO(content), width=max(width * scale, 1), height=max(height * scale, 1))
+    except (ValueError, OSError):
+        return Paragraph(escape(str(display_value or '')), cell_style)
 
 
 def display_structured_value(value):
